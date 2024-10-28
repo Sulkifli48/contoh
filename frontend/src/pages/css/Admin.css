@@ -1,0 +1,56 @@
+.dashboard-content{
+    position: relative;
+    background: white;
+    min-height: 100vh;
+    top: 0;
+    left: 78px;
+    width: calc(100% - 78px);
+    transition: all 0.5s ease;
+    z-index: 2;
+    padding: 30px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    margin: 16px;
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+    flex: 1;
+    min-width: 200px; /* Menentukan lebar minimum kartu */
+    max-width: 300px; /* Menentukan lebar maksimum kartu */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .card:hover {
+    transform: translateY(-10px);
+  }
+  
+  .card h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .card p {
+    margin: 8px 0 0;
+    font-size: 18px;
+    color: #777;
+  }
+  
+  .cards-container-db {
+    display: flex;
+    flex-wrap: wrap;
+    /* gap: px; */
+  }
+
+  .card-icon {
+    width: 50px; /* Sesuaikan ukuran ikon */
+    height: 50px; /* Sesuaikan ukuran ikon */
+    margin-bottom: 8px;
+  }

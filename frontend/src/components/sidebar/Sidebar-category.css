@@ -1,0 +1,59 @@
+.button-dropdown{
+    opacity: 0;
+    
+}
+
+.sidebar.open .button-dropdown{
+    opacity: 1;
+}
+
+.dropdown-category {
+    display: none; 
+    position: absolute; 
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); 
+    z-index: 10; 
+    opacity: 0;
+}
+
+.dropdown-category.open {
+    display: block; 
+    opacity: 1;
+}
+
+.dropdown-category a {
+    color: #3F72AF; 
+    padding: 12px 16px; 
+    text-decoration: none; 
+    display: block; /* Tampilkan link sebagai blok */
+}
+
+.dropdown-category a:hover {
+    color: whitesmoke;
+}
+
+.list-name {
+    display: flex;
+    justify-content: space-between; /* Memisahkan elemen secara merata */
+    align-items: center; /* Memusatkan elemen vertikal di tengah container */
+    width: 100%; /* Membuat container memenuhi lebar */
+}
+
+.sidebar li a .list-name {
+    color: #3F72AF;
+    font-size: 15px;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.4s;
+    margin: 0 12px;
+}
+.sidebar.open li a .list-name {
+    opacity: 1;
+    pointer-events: auto;
+}
+.sidebar li a:hover .list-name,
+.sidebar li a:hover i {
+    transition: all 0.5s ease;
+    color: #DBE2EF;
+}
