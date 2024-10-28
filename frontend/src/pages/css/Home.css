@@ -1,0 +1,91 @@
+/* Container untuk layout utama */
+.container {
+    padding: 20px;
+}
+
+/* Tombol hari */
+.day-buttons {
+    margin-bottom: 20px;
+}
+
+.day-buttons button {
+    margin-right: 10px;
+    padding: 10px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.day-buttons button:hover {
+    background-color: #0056b3;
+}
+
+.day-buttons button.active {
+    background-color: #0056b3; /* Warna saat tombol aktif */
+}
+
+/* Dropdown hari */
+.day-select {
+    margin-bottom: 20px; /* Beri ruang di bawah dropdown */
+}
+
+.day-select label {
+    font-size: 18px; /* Ukuran font label lebih besar */
+    font-weight: bold;
+    margin-right: 10px; /* Jarak antara label dan dropdown */
+}
+
+.day-select select {
+    font-size: 18px; /* Ukuran font lebih besar */
+    padding: 6px 1px; /* Tambahkan padding */
+    border-radius: 10px; /* Sudut melengkung */
+    border: 2px solid #007bff; /* Border biru */
+    background-color: #f8f9fa; /* Background terang */
+    color: #333; /* Warna teks */
+    transition: all 0.3s ease; /* Efek transisi */
+    cursor: pointer; /* Kursor pointer */
+}
+
+.day-select select:hover {
+    background-color: #e2e6ea;
+    border-color: #0056b3; 
+}
+
+.day-select select:focus {
+    outline: none; /* Hilangkan outline default */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Shadow saat fokus */
+}
+
+/* Tabel jadwal */
+.schedule-table {
+    width: 100%; /* Lebar penuh */
+    border-collapse: collapse; /* Hapus ruang antara sel */
+    table-layout: fixed; /* Layout tetap */
+}
+
+.schedule-table th {
+    background-color: #70a8e9; /* Warna latar belakang header */
+}
+
+.schedule-table th,
+.schedule-table td {
+    border: 1px solid #d8d8d8; /* Border untuk sel */
+    padding: 0; /* Hilangkan padding pada sel */
+    text-align: center; /* Teks di tengah */
+    height: 60px; /* Atur tinggi tetap untuk sel */
+    vertical-align: middle; /* Pastikan konten ditata di tengah secara vertikal */
+}
+
+.schedule-matkul {
+    display: flex;
+    align-items: center; /* Posisikan konten di tengah secara vertikal */
+    justify-content: center; /* Posisikan konten di tengah secara horizontal */
+    color: white; /* Ubah warna teks agar kontras dengan latar belakang */
+    height: 100%; /* Isi tinggi penuh dari sel */
+    box-sizing: border-box; /* Sertakan padding dan border dalam lebar total */
+}
+
+
