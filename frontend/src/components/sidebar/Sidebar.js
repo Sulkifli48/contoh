@@ -63,21 +63,28 @@ export default function Sidebar() {
           <span className="tooltip">Admin</span>
         </li>
         <li>
-          <Link to="/admin/add-dosen">
+          <Link to="/admin/dosen">
             <i class='bx bxs-group'></i>
             <span className="links_name">Dosen</span>
           </Link>
           <span className="tooltip">Dosen</span>
         </li>
         <li>
-          <Link to="/admin/add-matakuliah">
+          <Link to="/admin/matakuliah">
             <i class='bx bxs-graduation'></i>
             <span className="links_name">Matakuliah</span>
           </Link>
           <span className="tooltip">Matakuliah</span>
         </li>
         <li>
-          <Link to="/admin/add-ruangan">
+          <Link to="/admin/kelas">
+          <i class='bx bxs-book-open'/>
+            <span className="links_name">Kelas</span>
+          </Link>
+          <span className="tooltip">Kelas</span>
+        </li>
+        <li>
+          <Link to="/admin/ruangan">
             <i class='bx bxs-home-smile'></i>
             <span className="links_name">Ruangan</span>
           </Link>

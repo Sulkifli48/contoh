@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'; // Impor useEffect dan useState
 import axios from 'axios'; 
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import '../css/Home.css'; 
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import './Home.css'; 
 
 const Home = () => {
     const [selectedDay, setSelectedDay] = useState('Senin');
