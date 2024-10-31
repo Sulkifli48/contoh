@@ -12,7 +12,8 @@ const Home = () => {
         setSelectedDay(event.target.value);
     };
 
-    const rooms = ['GR01', 'GR02', 'GR03', 'GR04','GR05','GR06','GR07'];
+    const rooms = ['GR01', 'GR02', 'GR03', 'GR04', 'GR05', 'GR06', 'GR07', 'GR08', 'GR09'];
+
 
     const times = [];
     const morningStartHour = 7;
@@ -113,69 +114,66 @@ const Home = () => {
 
                 {/* Tabel untuk menampilkan jadwal */}
                 <table className="schedule-table">
-                    <thead>
-                        <tr>
-                            <th>Waktu</th>
-                            {rooms.map((room) => (
-                                <th key={room}>{room}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                            {times.map((time, index) => {
-                            const [startTime, endTime] = time.split(' - ');
+                <thead>
+                    <tr>
+                        <th className="sticky-time">Waktu</th>
+                        {rooms.map((room) => (
+                            <th key={room}>{room}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {times.map((time, index) => {
+                        const [startTime, endTime] = time.split(' - ');
 
-                            return (
-                                <tr key={index}>
-                                    <td>{time}</td>
-                                    {rooms.map((room) => {
-                                        // Find if there's a class starting at this time
-                                        const classInSlot = schedule.find(
-                                            (s) =>
-                                                s.room === room &&
-                                                s.start === startTime &&
-                                                s.day === selectedDay
-                                        );
+                        return (
+                            <tr key={index}>
+                                <td className="sticky-time">{time}</td> {/* Kolom Waktu Sticky */}
+                                {rooms.map((room) => {
+                                    const classInSlot = schedule.find(
+                                        (s) =>
+                                            s.room === room &&
+                                            s.start === startTime &&
+                                            s.day === selectedDay
+                                    );
 
-                                        if (classInSlot) {
-                                            const endTimeCalculated = calculateEndTime(classInSlot.start, classInSlot.sks); // Menghitung waktu akhir
-                                            const rowSpan = calculateRowSpan(classInSlot.start, endTimeCalculated);
-                                            const color = getColorByLevel(classInSlot.level);
-                                            return (
-                                                <td key={room} rowSpan={rowSpan}>
-                                                    <div className="schedule-matkul" style={{ backgroundColor: color }}>
-                                                    {classInSlot.subject}&nbsp;
-                                                    ({classInSlot.level}) <br />
+                                    if (classInSlot) {
+                                        const endTimeCalculated = calculateEndTime(classInSlot.start, classInSlot.sks);
+                                        const rowSpan = calculateRowSpan(classInSlot.start, endTimeCalculated);
+                                        const color = getColorByLevel(classInSlot.level);
+                                        return (
+                                            <td key={room} rowSpan={rowSpan}>
+                                                <div className="schedule-matkul" style={{ backgroundColor: color }}>
+                                                    {classInSlot.subject} ({classInSlot.level}) <br />
                                                     {classInSlot.dosen1} <br />
                                                     {classInSlot.dosen2 && <>{classInSlot.dosen2}<br /></>}
                                                     {classInSlot.dosen3 && <>{classInSlot.dosen3}<br /></>}
-                                                    </div>
-                                                </td>
-                                            );
-                                        }
-
-                                        // Check if the current time falls within a class's range
-                                        const classInRange = schedule.find(
-                                            (s) =>
-                                                s.room === room &&
-                                                calculateEndTime(s.start, s.sks) > startTime &&
-                                                s.start < endTime &&
-                                                s.day === selectedDay
+                                                </div>
+                                            </td>
                                         );
+                                    }
 
-                                        if (classInRange) {
-                                            return null;
-                                        }
+                                    const classInRange = schedule.find(
+                                        (s) =>
+                                            s.room === room &&
+                                            calculateEndTime(s.start, s.sks) > startTime &&
+                                            s.start < endTime &&
+                                            s.day === selectedDay
+                                    );
 
-                                        return <td key={room}></td>;
-                                    })}
-                                </tr>
-                            );
-                        })}
+                                    if (classInRange) {
+                                        return null;
+                                    }
 
-                    </tbody>
+                                    return <td key={room}></td>;
+                                })}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+
                 </table>
-            </div>
+                </div>
             <Footer />
         </div>
     );
