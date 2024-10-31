@@ -96,32 +96,58 @@
 }
 
 /* Tabel jadwal */
-.schedule-table {
-    width: 100%; /* Lebar penuh */
-    border-collapse: collapse; /* Hapus ruang antara sel */
-    table-layout: fixed; /* Layout tetap */
-}
-
-.schedule-table th {
-    background-color: #70a8e9; /* Warna latar belakang header */
-}
 
 .schedule-table th,
 .schedule-table td {
-    border: 1px solid #d8d8d8; /* Border untuk sel */
-    padding: 0; /* Hilangkan padding pada sel */
-    text-align: center; /* Teks di tengah */
-    height: 60px; /* Atur tinggi tetap untuk sel */
-    vertical-align: middle; /* Pastikan konten ditata di tengah secara vertikal */
+    border: 1px solid #d8d8d8; 
+    padding: 0; 
+    text-align: center; 
+    height: 60px; 
+    vertical-align: middle;
+    min-width: 220px; 
+    
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+
+
+.schedule-table th {
+    background-color: #70a8e9;
+}
+
+/* Kolom waktu sticky */
+.sticky-time {
+    position: sticky;
+    left: 0;
+    background-color: #f8f8f8;
+    z-index: 1;
+    min-width: 100px; 
 }
 
 .schedule-matkul {
     display: flex;
-    align-items: center; /* Posisikan konten di tengah secara vertikal */
-    justify-content: center; /* Posisikan konten di tengah secara horizontal */
-    color: white; /* Ubah warna teks agar kontras dengan latar belakang */
-    height: 100%; /* Isi tinggi penuh dari sel */
-    box-sizing: border-box; /* Sertakan padding dan border dalam lebar total */
+    align-items: center;
+    justify-content: center;
+    color: white;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 8px; 
+    font-size: 1rem; /* Ukuran font lebih besar */
+}
+
+/* Container scroll */
+.container {
+    overflow-x: auto;
+    padding: 20px;
 }
 
 
