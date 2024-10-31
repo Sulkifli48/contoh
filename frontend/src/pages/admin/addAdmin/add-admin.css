@@ -1,0 +1,29 @@
+.card-list-admin{
+    position: relative;
+    background: #F5F5F5;
+    min-height: 100vh;
+    top: 0;
+    left: 78px;
+    width: calc(100% - 78px);
+    transition: all 0.5s ease;
+    z-index: 2;
+    padding: 30px;
+    
+}
+
+.border-list-admin{
+    padding-top: 10px;
+    background: white;
+    padding: 20px;
+    
+}
+
+.border-botton{
+    background-color: #D8EEFE;
+    font-weight: bold;
+}
+
+.text_delete{
+    font-size: 1px;
+    color: red;
+}
