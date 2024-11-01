@@ -229,7 +229,7 @@
     background: none;
 }
 
-/* .dashboard{
+/* .{
     position: relative;
     background: white;
     min-height: 100vh;
@@ -244,6 +244,7 @@
 .sidebar.open ~ .dashboard{
     margin-left: 170px;
     width: calc(100% - 170px);
+    background: white;
 }
 
 @media (max-width: 420px) {

@@ -1,10 +1,16 @@
 import React, { useState, useRef } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./add-admin.css";
-import { FaEdit } from "react-icons/fa";
+// import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { MRT_GlobalFilterTextField, MRT_TableBodyCellValue, MRT_TablePagination, MRT_ToolbarAlertBanner, flexRender, useMaterialReactTable } from 'material-react-table';
+import {  
+  MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
+  MRT_TablePagination as MRT_TABLE_BODY_CELL_VALUE, 
+  MRT_TableBodyCellValue as MRT_TABLE_PAGINATION,
+  // MRT_ToolbarAlertBanner, 
+  flexRender, 
+  useMaterialReactTable } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
 
@@ -29,7 +35,7 @@ const AddAdmin = () => {
   const dinasRef = useRef();
   const passwordRef = useRef();
   const rolesRef = useRef();
-  const buttonRef = useRef(null);
+  // const buttonRef = useRef(null);
   const [admins, setAdmins] = useState([]);
 
   const handleOpenAddModal = () => {
@@ -49,12 +55,12 @@ const AddAdmin = () => {
     setAdminData({ ...adminData, [name]: value });
   };
 
-  const handleKeyDown = (e, nextRef) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      nextRef.current.focus();
-    }
-  };
+  // const handleKeyDown = (e, nextRef) => {
+  //   if (e.key === 'Enter') {
+  //     e.preventDefault();
+  //     nextRef.current.focus();
+  //   }
+  // };
 
   const handleAddAdmin = (e) => {
     e.preventDefault();
@@ -123,7 +129,7 @@ const AddAdmin = () => {
               >
                 add admin
               </button>
-              <MRT_GlobalFilterTextField table={table} />
+              <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
             </Box>
             <Table>
               <TableHead className='border-botton'>
@@ -144,7 +150,7 @@ const AddAdmin = () => {
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map(cell => (
                       <TableCell align="center" key={cell.id}>
-                        <MRT_TableBodyCellValue cell={cell} table={table} />
+                        <MRT_TABLE_PAGINATION cell={cell} table={table} />
                       </TableCell>
                     ))}
                   </TableRow>
@@ -152,7 +158,7 @@ const AddAdmin = () => {
               </TableBody>
             </Table>
             </TableContainer>
-            <MRT_TablePagination table={table} />
+            <MRT_TABLE_BODY_CELL_VALUE table={table} />
           </Stack>
         </div>
 

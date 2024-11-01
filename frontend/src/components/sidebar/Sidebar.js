@@ -70,6 +70,13 @@ export default function Sidebar() {
           <span className="tooltip">Dosen</span>
         </li>
         <li>
+          <Link to="/admin/ruangan">
+            <i class='bx bxs-home-smile'></i>
+            <span className="links_name">Ruangan</span>
+          </Link>
+          <span className="tooltip">Ruangan</span>
+        </li>
+        <li>
           <Link to="/admin/matakuliah">
             <i class='bx bxs-graduation'></i>
             <span className="links_name">Matakuliah</span>
@@ -82,13 +89,6 @@ export default function Sidebar() {
             <span className="links_name">Kelas</span>
           </Link>
           <span className="tooltip">Kelas</span>
-        </li>
-        <li>
-          <Link to="/admin/ruangan">
-            <i class='bx bxs-home-smile'></i>
-            <span className="links_name">Ruangan</span>
-          </Link>
-          <span className="tooltip">Ruangan</span>
         </li>
         <li>
           <Link to="/admin/jadwal">
