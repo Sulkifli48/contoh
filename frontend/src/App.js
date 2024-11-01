@@ -14,6 +14,7 @@ const App = () => {
     <Router>
         <Routes>
             <Route path="/" element={<Home />} />
+
             <Route path="/admin/dashboard" element={<DashAdmin />} />
             <Route path="/admin/add-admin" element={<AddAdmin />} />
 

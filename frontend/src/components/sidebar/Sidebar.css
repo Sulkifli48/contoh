@@ -241,10 +241,18 @@
     padding: 30px;
 } */
 
-.sidebar.open ~ .dashboard{
+.sidebar.open ~ .dashboard {
     margin-left: 170px;
-    width: calc(100% - 170px);
-    background: white;
+    /* width: calc(100% - 170px); */
+    transition: margin-left 0.5s ease;
+}
+
+.sidebar.closed ~ .dashboard {
+    transition: margin-left 0.5s ease;
+}
+
+.sidebar.closed {
+    transition: width 0.5s ease;
 }
 
 @media (max-width: 420px) {
