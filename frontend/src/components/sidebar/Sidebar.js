@@ -3,46 +3,35 @@ import './Sidebar.css';
 import './Sidebar-category.css';
 import { Link, useNavigate } from 'react-router-dom';
 
-// import IconCS from '../../assets/img/support.png';
-
 export default function Sidebar() {
   const name = sessionStorage.getItem("name");
   const email = sessionStorage.getItem("email");
   const [isOpen, setIsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-
+  
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   const navigate = useNavigate();
-
   const handleLogout = () => {
-    // Menampilkan loading
     setLoggingOut(true);
-
-    // Hapus informasi autentikasi dari sesi pengguna
     sessionStorage.removeItem("user_id");
     sessionStorage.removeItem("user_role");
     sessionStorage.removeItem("name");
     sessionStorage.removeItem("email");
-
     setTimeout(() => {
-      // Sembunyikan loading
       setLoggingOut(false);
-
-      // Redirect ke halaman login
       if (!sessionStorage.getItem("user_role")) {
         navigate("/");
         window.location.reload();
       }
-
-      console.log(`Good bye ${name}`);
+      console.log(`Goodbye ${name}`);
     }, 1000);
   };
 
   return (
-    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+    <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="logo-details">
         <div className="logo_name">BPKSDMD</div>
         <i className='bx bx-menu' id="btn" onClick={toggleSidebar}></i>
@@ -85,7 +74,7 @@ export default function Sidebar() {
         </li>
         <li>
           <Link to="/admin/kelas">
-          <i class='bx bxs-book-open'/>
+            <i class='bx bxs-book-open'/>
             <span className="links_name">Kelas</span>
           </Link>
           <span className="tooltip">Kelas</span>
@@ -97,7 +86,6 @@ export default function Sidebar() {
           </Link>
           <span className="tooltip">Jadwal</span>
         </li>
-
         <li className="profile">
           <div className="profile-details">
             <div className="name_job">

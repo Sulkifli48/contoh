@@ -13,8 +13,8 @@ import {
   useMaterialReactTable } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
-import { initialMatakuliahs } from '../matakuliah/dataMatkul';
-
+import { initialMatakuliahs } from '../../../assets/mockdata/dataMatkul';
+import { initialDosen } from '../../../assets/mockdata/dataDosen';
 
 const AddKelas = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -33,7 +33,7 @@ const AddKelas = () => {
 
   // const matakuliahRef = useRef();
   const kelasRef = useRef();
-  const dosenRef = useRef();
+  // const dosenRef = useRef();
   const kapasitasRef = useRef();
   const jenjangRef = useRef();
   // const buttonRef = useRef(null);
@@ -202,8 +202,19 @@ const AddKelas = () => {
                 <TextField fullWidth label="Kelas" name="kelas" value={matakuliahData.kelas} onChange={handleChange} inputRef={kelasRef} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Dosen" name="dosen" value={matakuliahData.dosen} onChange={handleChange} inputRef={dosenRef} required />
+                <Autocomplete
+                  options={initialDosen.map((dosen) => dosen.nama)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Dosen" name="dosen" required />
+                  )}
+                  value={matakuliahData.dosen}
+                  onChange={(event, newValue) => {
+                    setMatakuliahData({ ...matakuliahData, dosen: newValue });
+                  }}
+                  freeSolo
+                />
               </Grid>
+
               <Grid item xs={12}>
                 <TextField fullWidth label="Kapasitas" name="kapasitas" value={matakuliahData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
               </Grid>

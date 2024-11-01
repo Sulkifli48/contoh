@@ -118,6 +118,7 @@ const AddAdmin = () => {
   return (
     <div className='bg-db'>
       <Sidebar />
+      <div className='dashboard'>
         <div className='card-list-admin'>
           <h1>Create Admin</h1>
           <Stack>
@@ -204,6 +205,7 @@ const AddAdmin = () => {
           </form>
         </Box>
       </Modal>
+    </div>
     </div>
   );
 };

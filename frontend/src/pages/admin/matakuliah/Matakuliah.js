@@ -13,7 +13,7 @@ import {
   useMaterialReactTable } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
-import { initialMatakuliahs } from './dataMatkul';
+import { initialMatakuliahs } from '../../../assets/mockdata/dataMatkul';
 
 
 const AddMatakuliah = () => {
@@ -53,13 +53,6 @@ const AddMatakuliah = () => {
     const { name, value } = e.target;
     setMatakuliahData({ ...matakuliahData, [name]: value });
   };
-
-  // const handleKeyDown = (e, nextRef) => {
-  //   if (e.key === 'Enter') {
-  //     e.preventDefault();
-  //     nextRef.current.focus();
-  //   }
-  // };
 
   const handleAddMatakuliah = (e) => {
     e.preventDefault();
