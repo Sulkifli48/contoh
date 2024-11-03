@@ -3,7 +3,7 @@ import Sidebar from '../../../components/sidebar/Sidebar';
 import "./add-admin.css";
 // import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
-import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import {  
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
   MRT_TablePagination as MRT_TABLE_BODY_CELL_VALUE, 
@@ -25,16 +25,12 @@ const AddAdmin = () => {
   const [adminData, setAdminData] = useState({
     name: '',
     email: '',
-    dinas: '',
     password: '',
-    roles: '',
   });
 
   const nameRef = useRef();
   const emailRef = useRef();
-  const dinasRef = useRef();
   const passwordRef = useRef();
-  const rolesRef = useRef();
   // const buttonRef = useRef(null);
   const [admins, setAdmins] = useState([]);
 
@@ -64,13 +60,11 @@ const AddAdmin = () => {
 
   const handleAddAdmin = (e) => {
     e.preventDefault();
-    setAdmins([...admins, { ...adminData, createdAt: Date.now() }]);
+    setAdmins([{ ...adminData, createdAt: Date.now() },...admins]);
     setAdminData({
       name: '',
       email: '',
-      dinas: '',
       password: '',
-      roles: '',
     });
     setIsAddModalOpen(false);
   };
@@ -88,7 +82,6 @@ const AddAdmin = () => {
   const columns = [
     { accessorKey: 'name', header: 'Nama' },
     { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'roles', header: 'Roles' },
     {
       accessorKey: "action",
       header: "Action",
@@ -189,16 +182,7 @@ const AddAdmin = () => {
                 <TextField fullWidth label="Email" name="email" value={adminData.email} onChange={handleChange} inputRef={emailRef} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Dinas" name="dinas" value={adminData.dinas} onChange={handleChange} inputRef={dinasRef} required />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField fullWidth label="Password" name="password" value={adminData.password} onChange={handleChange} inputRef={passwordRef} required />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField select fullWidth label="Roles" name="roles" value={adminData.roles} onChange={handleChange} inputRef={rolesRef} required>
-                  <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="SuperAdmin">Super Admin</MenuItem>
-                </TextField>
               </Grid>
             </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>

@@ -1,0 +1,27 @@
+.card-list-ruangan {
+    position: relative;
+    min-height: 100vh;
+    top: 0;
+    background: #F5F5F5;
+    left: 78px;
+    width: calc(100% - 78px);
+    transition: all 0.5s ease;
+    z-index: 2;
+    padding: 30px;
+}
+
+.border-list-ruangan {
+    padding-top: 10px;
+    background: white;
+    padding: 20px;
+}
+
+.border-botton {
+    background-color: #D8EEFE;
+    font-weight: bold;
+}
+
+.text-delete {
+    font-size: 14px;
+    color: red;
+}
