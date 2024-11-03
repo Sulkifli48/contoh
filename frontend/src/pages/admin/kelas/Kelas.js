@@ -65,7 +65,7 @@ const AddKelas = () => {
 
   const handleAddKelas = (e) => {
     e.preventDefault();
-    setMatakuliahs([...matakuliahs, { ...matakuliahData, createdAt: Date.now() }]);
+    setMatakuliahs([{ ...matakuliahData, createdAt: Date.now() },...matakuliahs]);
     setMatakuliahData({
       matakuliah: '',
       kelas: '',
@@ -87,7 +87,7 @@ const AddKelas = () => {
   };
 
   const columns = [
-    { accessorKey: 'matakuliah', header: 'Matakuliah' },
+    { accessorKey: 'matakuliah.nama', header: 'Matakuliah' },
     { accessorKey: 'kelas', header: 'Kelas' },
     { accessorKey: 'dosen', header: 'Dosen' },
     { accessorKey: 'kapasitas', header: 'Kapasitas' },
@@ -186,20 +186,38 @@ const AddKelas = () => {
           <form onSubmit={handleAddKelas}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
+              <Grid item xs={12}>
                 <Autocomplete
-                  options={initialMatakuliahs.map((matkul) => matkul.matakuliah)}
+                  options={initialMatakuliahs.map((matkul) => `${matkul.kode} - ${matkul.matakuliah}`)} 
                   renderInput={(params) => (
-                    <TextField {...params} label="Matakuliah" name="matakuliah" required />
+                    <TextField {...params} label="Kode - Matakuliah" name="matakuliah" required />
                   )}
-                  value={matakuliahData.matakuliah}
+                  value={matakuliahData.matakuliah ? `${matakuliahData.matakuliah.kode} - ${matakuliahData.matakuliah.nama}` : ''} 
                   onChange={(event, newValue) => {
-                    setMatakuliahData({ ...matakuliahData, matakuliah: newValue });
+                    if (newValue) {
+                      const [kode, nama] = newValue.split(' - ');
+                      setMatakuliahData({ 
+                        kode, 
+                        nama 
+                      });
+                    } else {
+                      setMatakuliahData({ 
+                        kode: '', 
+                        nama: ''
+                      });
+                    }
                   }}
                   freeSolo
                 />
               </Grid>
+
+              </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Kelas" name="kelas" value={matakuliahData.kelas} onChange={handleChange} inputRef={kelasRef} required />
+                <TextField select fullWidth label="Kelas" name="kelas" value={matakuliahData.kelas} onChange={handleChange} inputRef={kelasRef} required >
+                  <MenuItem value="a">A</MenuItem>
+                  <MenuItem value="b">B</MenuItem>
+                  <MenuItem value="c">C</MenuItem>
+                </TextField>
               </Grid>
               <Grid item xs={12}>
                 <Autocomplete
@@ -216,7 +234,7 @@ const AddKelas = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <TextField fullWidth label="Kapasitas" name="kapasitas" value={matakuliahData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
+                <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={matakuliahData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
               </Grid>
               <Grid item xs={12}>
                 <TextField select fullWidth 

@@ -56,7 +56,7 @@ const AddMatakuliah = () => {
 
   const handleAddMatakuliah = (e) => {
     e.preventDefault();
-    setMatakuliahs([...matakuliahs, { ...matakuliahData, createdAt: Date.now() }]);
+    setMatakuliahs([{ ...matakuliahData, createdAt: Date.now() }, ...matakuliahs]);
     setMatakuliahData({
       kode: '',
       matakuliah: '',
