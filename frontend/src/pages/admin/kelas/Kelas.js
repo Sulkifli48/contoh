@@ -81,7 +81,15 @@ const AddKelas = () => {
       return; 
     }
     setDosenError(false);
-    setMatakuliahs([ { ...matakuliahData, createdAt: Date.now() }, ...matakuliahs]);
+  
+    // Ambil nama mata kuliah tanpa kode
+    const namaMatkul = matakuliahData.matakuliah.split(' - ')[1] || matakuliahData.matakuliah;
+  
+    setMatakuliahs([ 
+      { ...matakuliahData, matakuliah: namaMatkul, createdAt: Date.now() }, // Hanya simpan nama mata kuliah
+      ...matakuliahs 
+    ]);
+  
     setMatakuliahData({
       matakuliah: '',
       kelas: '',
@@ -91,6 +99,7 @@ const AddKelas = () => {
     });
     setIsAddModalOpen(false);
   };
+  
 
   const handleDeleteMatakuliah = (matakuliahId, kelas) => {
     setMatakuliahToDelete({ id: matakuliahId, kelas });
@@ -105,42 +114,46 @@ const AddKelas = () => {
   useEffect(() => {
     if (matakuliahData.matakuliah && matakuliahData.skala) {
       let newKelas = '';
+      const namaMatkul = matakuliahData.matakuliah.split(' - ')[1] || matakuliahData.matakuliah;
       const existingClasses = matakuliahs
-        .filter((item) => item.matakuliah === matakuliahData.matakuliah)
-        .map((item) => item.kelas);
+        .filter(item => item.matakuliah === namaMatkul)
+        .map(item => item.kelas);
   
       setSkalaWarning('');
   
       if (matakuliahData.skala === 'Nasional') {
         let kelasLetter = 'A';
-        while (existingClasses.includes(`${matakuliahData.matakuliah}. ${kelasLetter}`)) {
+        while (existingClasses.includes(`${namaMatkul}. ${kelasLetter}`)) {
           kelasLetter = String.fromCharCode(kelasLetter.charCodeAt(0) + 1);
         }
-        newKelas = `${matakuliahData.matakuliah}. ${kelasLetter}`;
+        newKelas = `${namaMatkul}. ${kelasLetter}`;
       } else if (matakuliahData.skala === 'Inter') {
-        if (!existingClasses.includes(`${matakuliahData.matakuliah}. inter`)) {
-          newKelas = `${matakuliahData.matakuliah}. inter`;
+        if (!existingClasses.includes(`${namaMatkul}. inter`)) {
+          newKelas = `${namaMatkul}. inter`;
         } else {
           setSkalaWarning('Hanya bisa ada satu kelas "Inter" untuk mata kuliah ini.');
         }
       } else if (matakuliahData.skala === 'MBKM') {
-        if (!existingClasses.includes(`${matakuliahData.matakuliah}. MBKM`)) {
-          newKelas = `${matakuliahData.matakuliah}. MBKM`;
+        if (!existingClasses.includes(`${namaMatkul}. MBKM`)) {
+          newKelas = `${namaMatkul}. MBKM`;
         } else {
           setSkalaWarning('Hanya bisa ada satu kelas "MBKM" untuk mata kuliah ini.');
         }
       }
-      setMatakuliahData((prevData) => ({
+  
+      // Update hanya `kelas` tanpa mengubah `matakuliah`
+      setMatakuliahData(prevData => ({
         ...prevData,
-        kelas: newKelas || '',
+        kelas: newKelas || ''
       }));
     } else {
-      setMatakuliahData((prevData) => ({
+      setMatakuliahData(prevData => ({
         ...prevData,
         kelas: '',
       }));
     }
-  }, [matakuliahData.matakuliah, matakuliahData.skala, matakuliahs]);  
+  }, [matakuliahData.matakuliah, matakuliahData.skala, matakuliahs]);
+  
 
   const columns = [
     { accessorKey: 'matakuliah', header: 'Matakuliah' },
@@ -235,12 +248,12 @@ const AddKelas = () => {
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Matakuliah</DialogTitle>
         <DialogContent>
-          <Typography>To confirm deletion, please enter: "delete-{matakuliahToDelete.kelas}"</Typography>
+          <Typography>To confirm deletion, please enter: "Delete"</Typography>
           <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} disabled={confirmationText !== `delete-${matakuliahToDelete.kelas}`}>Delete</Button>
+          <Button onClick={handleConfirmDelete} disabled={confirmationText !== 'Delete'}>Delete</Button>
         </DialogActions>
       </Dialog>
 
