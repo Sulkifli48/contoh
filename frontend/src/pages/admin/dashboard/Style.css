@@ -21,6 +21,7 @@
     padding: 16px;
     margin: 16px;
     text-align: center;
+    text-decoration: none;
     transition: transform 0.2s ease-in-out;
     flex: 1;
     min-width: 200px; /* Menentukan lebar minimum kartu */

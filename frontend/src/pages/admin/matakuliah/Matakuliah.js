@@ -15,27 +15,28 @@ import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
 import { initialMatakuliahs } from '../../../assets/mockdata/dataMatkul';
 
-
 const AddMatakuliah = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [matakuliahToDelete, setMatakuliahToDelete] = useState({ id: '', kodeMatakul: '' });
   const [confirmationText, setConfirmationText] = useState('');
-//   const [Matakuliahs, setMatakuliahs] = useState(initialMatakuliahs);
+  const [matakuliahs, setMatakuliahs] = useState(initialMatakuliahs);
 
   const [matakuliahData, setMatakuliahData] = useState({
     kode: '',
     matakuliah: '',
     sks: '',
     wp: '',
+    semester: '',
+    jenjang: '',
   });
 
-  const kodeRef = useRef();
-  const matakuliahRef = useRef();
-  const sksRef = useRef();
-  const wpRef = useRef();
-  // const buttonRef = useRef(null);
-  const [matakuliahs, setMatakuliahs] = useState(initialMatakuliahs);
+  const kodeRef = useRef()
+  const matakuliahRef = useRef()
+  const sksRef = useRef()
+  const wpRef = useRef()
+  const semesterRef = useRef()
+  const jenjangRef = useRef()
 
   const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
@@ -51,8 +52,13 @@ const AddMatakuliah = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setMatakuliahData({ ...matakuliahData, [name]: value });
+    setMatakuliahData(prevData => ({
+        ...prevData,
+        [name]: value,
+        ...(name === "wp" && value === "P" ? { semester: "All" } : {})
+    }));
   };
+
 
   const handleAddMatakuliah = (e) => {
     e.preventDefault();
@@ -62,6 +68,8 @@ const AddMatakuliah = () => {
       matakuliah: '',
       sks: '',
       wp: '',
+      semester: '',
+      jenjang: '',
     });
     setIsAddModalOpen(false);
   };
@@ -80,7 +88,9 @@ const AddMatakuliah = () => {
     { accessorKey: 'kode', header: 'Kode' },
     { accessorKey: 'matakuliah', header: 'Matakuliah' },
     { accessorKey: 'sks', header: 'SKS' },
+    { accessorKey: 'jenjang', header: 'Jenjang' },
     { accessorKey: 'wp', header: 'W/P' },
+    { accessorKey: 'semester', header: 'Semester'},
     {
       accessorKey: "action",
       header: "Action",
@@ -112,7 +122,6 @@ const AddMatakuliah = () => {
     <div className='bg-db'>
       <Sidebar />
       <div className='dashboard'>
-      {/* <div className="dashboard-content"> */}
         <div className='card-list-matakuliah'>
           <h1>Daftar Matakuliah</h1>
           <Stack>
@@ -184,15 +193,36 @@ const AddMatakuliah = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField select fullWidth label="SKS" name="sks" value={matakuliahData.sks} onChange={handleChange} inputRef={sksRef} required>
-                  <MenuItem value="2sks">2</MenuItem>
-                  <MenuItem value="3sks">3</MenuItem>
-                  <MenuItem value="4sks">4</MenuItem>
+                  <MenuItem value="2">2</MenuItem>
+                  <MenuItem value="3">3</MenuItem>
+                  <MenuItem value="4">4</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="WP" name="wp" value={matakuliahData.wp} onChange={handleChange} inputRef={wpRef} required>
-                  <MenuItem value="wajib">Wajib</MenuItem>
-                  <MenuItem value="pilihan">Pilihan</MenuItem>
+                <TextField select fullWidth label="Jenjang" name="jenjang" value={matakuliahData.jenjang} onChange={handleChange} inputRef={jenjangRef} required>
+                  <MenuItem value="S1">Sarjana</MenuItem>
+                  <MenuItem value="S2">Magister</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField select fullWidth label="W/P" name="wp" value={matakuliahData.wp} onChange={handleChange} inputRef={wpRef} required>
+                  <MenuItem value="W">Wajib</MenuItem>
+                  <MenuItem value="P">Pilihan</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField select fullWidth 
+                  label="Semester" 
+                  name="semester" 
+                  value={matakuliahData.semester} 
+                  onChange={handleChange} 
+                  inputRef={semesterRef} 
+                  disabled={matakuliahData.wp === "P"}
+                  required
+                >
+                  <MenuItem value="Ganjil">Ganjil</MenuItem>
+                  <MenuItem value="Genap">Genap</MenuItem>
+                  <MenuItem value="All">All</MenuItem>
                 </TextField>
               </Grid>
             </Grid>
