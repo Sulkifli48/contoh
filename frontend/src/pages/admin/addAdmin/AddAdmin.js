@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./add-admin.css";
 // import { FaEdit } from "react-icons/fa";
@@ -14,12 +14,10 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
 
-
-
 const AddAdmin = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [adminToDelete, setAdminToDelete] = useState({ id: '', name: '' });
+  const [adminToDelete, setAdminToDelete] = useState({ id_users: '', name: '' });
   const [confirmationText, setConfirmationText] = useState('');
 
   const [adminData, setAdminData] = useState({
@@ -51,47 +49,86 @@ const AddAdmin = () => {
     setAdminData({ ...adminData, [name]: value });
   };
 
-  // const handleKeyDown = (e, nextRef) => {
-  //   if (e.key === 'Enter') {
-  //     e.preventDefault();
-  //     nextRef.current.focus();
-  //   }
-  // };
+  const fetchUsers = async () => {
+      try {
+          const response = await fetch('http://127.0.0.1:5000/api/listusers');
+          const data = await response.json();
+          console.log(data);
+          setAdmins(data);
+      } catch (error) {
+          console.error("Error fetching data: ", error);
+      }
+  };
 
-  const handleAddAdmin = (e) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAddAdmin = async (e) => {
     e.preventDefault();
-    setAdmins([{ ...adminData, createdAt: Date.now() },...admins]);
-    setAdminData({
-      name: '',
-      email: '',
-      password: '',
-    });
-    setIsAddModalOpen(false);
-  };
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/usersadd', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(adminData),
+        });
 
-  const handleDeleteAdmin = (adminId, name) => {
-    setAdminToDelete({ id: adminId, name });
-    setIsDeleteDialogOpen(true);
-  };
+        if (response.ok) {
+          await fetchUsers();
+          setAdminData({ name: '', email: '', password: '' }); // Reset input setelah tambah
+          setIsAddModalOpen(false);
+            console.log(adminData)
+        } else {
+            console.error('Failed to add User');
+        }
+    } catch (error) {
+        console.error("Error adding matakuliah: ", error);
+    }
+};
 
-  const handleConfirmDelete = () => {
-    setAdmins(admins.filter(admin => admin.id !== adminToDelete.id));
-    setIsDeleteDialogOpen(false);
-  };
+const handleDeleteAdmin = (adminId, name) => {
+  setAdminToDelete({ id_users: adminId, name });
+  setIsDeleteDialogOpen(true);
+};
 
-  const columns = [
-    { accessorKey: 'name', header: 'Nama' },
-    { accessorKey: 'email', header: 'Email' },
-    {
-      accessorKey: "action",
-      header: "Action",
-      Cell: ({ row }) => (
-        <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteAdmin(row.original.id, row.original.name)} />
-        </div>
-      ),
-    },
-  ];
+const handleConfirmDelete = async () => {
+  if (confirmationText === `delete`) {
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/usersdelete/${adminToDelete.id_users}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setAdmins(admins.filter(admin => admin.id_users !== adminToDelete.id_users));
+        setIsDeleteDialogOpen(false);
+        setConfirmationText('');
+      } else {
+        console.error('Failed to delete admin');
+      }
+    } catch (error) {
+      console.error("Error deleting admin: ", error);
+    }
+  } else {
+    alert("Confirmation text does not match.");
+  }
+};
+
+const columns = [
+  { accessorKey: 'name', header: 'Nama' },
+  { accessorKey: 'email', header: 'Email' },
+  {
+    accessorKey: "action",
+    header: "Action",
+    Cell: ({ row }) => (
+      <div>
+        <MdDelete color='red' size={20} onClick={() => handleDeleteAdmin(row.original.id_users)} />
+      </div>
+    ),
+  },
+];
+
 
   const table = useMaterialReactTable({
     columns,
@@ -159,7 +196,7 @@ const AddAdmin = () => {
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Admin</DialogTitle>
         <DialogContent>
-          <Typography>To confirm deletion, please enter: "delete-{adminToDelete.name}"</Typography>
+          <Typography>To confirm deletion, please enter: "delete"</Typography>
           <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>

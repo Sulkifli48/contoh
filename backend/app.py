@@ -1,54 +1,24 @@
-from flask import Flask, jsonify
+from flask import Flask
+from database import mysql, init_db
 from flask_cors import CORS
 
+from api.matakuliah import matakuliah_bp
+from api.users import users_bp
+from api.dosen import dosen_bp
+from api.ruangan import ruangan_bp
+
 app = Flask(__name__)
+
+# Inisialisasi database
+init_db(app)
 CORS(app)
 
-@app.route('/api/schedule', methods=['GET'])
-def get_schedule():
-    schedule = [
-    {
-        "subject": "Basis Data A",
-        "room": "GR01",
-        "start": "07:50",
-        "day": "Senin",
-        "sks": 2,
-        "level": "S1",
-        "dosen1": "Pak Dosen 1",
-        "dosen2": "Pak Dosen 2",
-    },
-    {
-        "subject": "Pemrograman Web B",
-        "room": "GR02",
-        "start": "13:00",
-        "day": "Senin",
-        "sks": 2,
-        "level": "S2",
-        "dosen1": "Pak Dosen 1",
-        "dosen2": "Pak Dosen 2",
-    },
-    {
-        "subject": "Komputasi B",
-        "room": "GR02",
-        "start": "14:40",
-        "day": "Senin",
-        "sks": 2,
-        "level": "Inter",
-        "dosen1": "Pak Dosen 1",
-    },
-    {
-        "subject": "Pemrograman Web A",
-        "room": "GR04",
-        "start": "13:50",
-        "day": "Senin",
-        "sks": 3,
-        "level": "S1",
-        "dosen1": "Pak Dosen 1",
-        "dosen2": "Pak Dosen 2",
-        "dosen3": "Pak Dosen 3",
-    },
-    ]
-    return jsonify(schedule)
+# Register blueprint untuk endpoint matakuliah
+app.register_blueprint(matakuliah_bp, url_prefix='/api')
+app.register_blueprint(users_bp, url_prefix='/api')
+app.register_blueprint(dosen_bp, url_prefix='/api')
+app.register_blueprint(ruangan_bp, url_prefix='/api')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True)
+    app.run(debug=True)
+    
