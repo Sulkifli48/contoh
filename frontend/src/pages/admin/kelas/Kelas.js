@@ -41,9 +41,8 @@ const AddKelas = () => {
   const [selectedSemester, setSelectedSemester] = useState('All');
   const [selectedJenjang, setSelectedJenjang] = useState('All');
   const [skalaWarning, setSkalaWarning] = useState(''); 
-
   const [matakuliahs, setMatakuliahs] = useState([]);
-
+  const [matakuliahError, setMatakuliahError] = useState(false);
   const [dosenError, setDosenError] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -77,19 +76,24 @@ const AddKelas = () => {
   const handleAddKelas = (e) => {
     e.preventDefault();
     if (matakuliahData.dosen.length === 0) {
-      setDosenError(true); 
+      setDosenError(true);
       return; 
     }
     setDosenError(false);
-  
-    // Ambil nama mata kuliah tanpa kode
+    
+    const matakuliahValid = initialMatakuliahs.some(
+      matkul => `${matkul.kode} - ${matkul.matakuliah}` === matakuliahData.matakuliah 
+    );
+      if (!matakuliahValid) {
+        setMatakuliahError(true);
+        return;
+      }
+      setMatakuliahError(false);
+    
     const namaMatkul = matakuliahData.matakuliah.split(' - ')[1] || matakuliahData.matakuliah;
-  
-    setMatakuliahs([ 
-      { ...matakuliahData, matakuliah: namaMatkul, createdAt: Date.now() }, // Hanya simpan nama mata kuliah
-      ...matakuliahs 
-    ]);
-  
+    setMatakuliahs([{ ...matakuliahData, matakuliah: namaMatkul, createdAt: Date.now() }, ...matakuliahs]);
+
+    // Reset data
     setMatakuliahData({
       matakuliah: '',
       kelas: '',
@@ -98,7 +102,7 @@ const AddKelas = () => {
       skala: '',
     });
     setIsAddModalOpen(false);
-  };
+}
   
 
   const handleDeleteMatakuliah = (matakuliahId, kelas) => {
@@ -295,13 +299,27 @@ const AddKelas = () => {
                     (selectedJenjang === 'All' || matkul.jenjang === selectedJenjang) && 
                     (selectedSemester === 'All' || matkul.semester === selectedSemester || matkul.semester === 'All')
                   )
-                  .map((matkul) => `${matkul.kode} - ${matkul.matakuliah}`)} // Format yang diinginkan
+                  .map((matkul) => `${matkul.kode} - ${matkul.matakuliah}`)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Matakuliah" name="matakuliah" required />
+                  <TextField 
+                    {...params} 
+                    label="Matakuliah" 
+                    name="matakuliah"
+                    error={matakuliahError} 
+                    helperText={matakuliahError ? "Silakan pilih mata kuliah yang valid dari daftar." : ""} 
+                    required 
+                  />
                 )}
                 value={matakuliahData.matakuliah}
                 onChange={(event, newValue) => {
                   setMatakuliahData({ ...matakuliahData, matakuliah: newValue || '' });
+                  setMatakuliahError(false);
+                }}
+                onBlur={() => {
+                  const matakuliahValid = initialMatakuliahs.some(matkul => 
+                    `${matkul.kode} - ${matkul.matakuliah}` === matakuliahData.matakuliah
+                  );
+                  setMatakuliahError(!matakuliahValid); 
                 }}
                 freeSolo
               />
