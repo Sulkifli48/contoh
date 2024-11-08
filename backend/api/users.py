@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request  # Tambahkan request di sini
+from flask import Blueprint, jsonify, request
 from database import mysql
 from datetime import datetime
 

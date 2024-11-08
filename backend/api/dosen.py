@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request  # Tambahkan request di sini
+from flask import Blueprint, jsonify, request
 from database import mysql
 from datetime import datetime
 
@@ -7,14 +7,14 @@ dosen_bp = Blueprint('dosen', __name__)
 @dosen_bp.route('/listdosen', methods=['GET'])
 def get_dosen():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id_dosen, nip, name, bidang, createdAt FROM dosen_db")
+    cur.execute("SELECT id_dosen, nip, dosen, bidang, createdAt FROM dosen_db")
     rows = cur.fetchall()
     cur.close()
     data = [
         {
             'id_dosen': row[0],
             'nip': row[1],
-            'name': row[2],
+            'dosen': row[2],
             'bidang': row[3],
             'createdAt': row[4],
         }
@@ -27,13 +27,13 @@ def get_dosen():
 def add_dosen():
     data = request.get_json()
     nip = data['nip']
-    name = data['name']
+    dosen = data['dosen']
     bidang = data['bidang']
     createdAt = datetime.now()
 
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO dosen_db (nip, name, bidang, createdAt) VALUES (%s, %s, %s, %s)",
-                (nip, name, bidang, createdAt))
+    cur.execute("INSERT INTO dosen_db (nip, dosen, bidang, createdAt) VALUES (%s, %s, %s, %s)",
+                (nip, dosen, bidang, createdAt))
     mysql.connection.commit()
     cur.close()
 
