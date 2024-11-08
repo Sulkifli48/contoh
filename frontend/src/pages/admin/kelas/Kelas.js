@@ -23,7 +23,8 @@ import {
   DialogContent, 
   DialogActions, 
   Autocomplete, 
-  FormHelperText  
+  FormHelperText,
+  IconButton,
 } from '@mui/material';
 import {  
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD, 
@@ -33,22 +34,27 @@ import {
   useMaterialReactTable 
 } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
-import { IconButton } from '@mui/material';
-import { initialMatakuliahs } from '../../../assets/mockdata/dataMatkul';
-import { initialDosen } from '../../../assets/mockdata/dataDosen';
 
 const AddKelas = () => {
-  const [selectedSemester, setSelectedSemester] = useState('All');
-  const [selectedJenjang, setSelectedJenjang] = useState('All');
-  const [skalaWarning, setSkalaWarning] = useState(''); 
-  const [matakuliahs, setMatakuliahs] = useState([]);
-  const [matakuliahError, setMatakuliahError] = useState(false);
-  const [dosenError, setDosenError] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [matakuliahToDelete, setMatakuliahToDelete] = useState({ id: '', kelas: '' });
+  const [kelasToDelete, setKelasToDelete] = useState({ id: '', kelas: '' });
   const [confirmationText, setConfirmationText] = useState('');
-  const [matakuliahData, setMatakuliahData] = useState({
+  
+  const [selectedSemester, setSelectedSemester] = useState('All');
+  const [selectedJenjang, setSelectedJenjang] = useState('All');
+  const [skalaWarning, setSkalaWarning] = useState('');
+  
+  const [matakuliahs, setMatakuliahs] = useState([]);
+  const [matakuliahError, setMatakuliahError] = useState(false);
+  const [matakuliahsData, setMatakuliahsData] = useState([]);
+  
+  const [dosenData, setDosenData] = useState([]);
+  const [dosenError, setDosenError] = useState(false);
+
+
+  const [kelasData, setKelasData] = useState([]);
+  const [listKelasData, setListKelasData] = useState({
     matakuliah: '',
     kelas: '',
     dosen: [],
@@ -70,31 +76,59 @@ const AddKelas = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setMatakuliahData({ ...matakuliahData, [name]: value });
+    setListKelasData({ ...listKelasData, [name]: value });
   };
 
   const handleAddKelas = (e) => {
     e.preventDefault();
-    if (matakuliahData.dosen.length === 0) {
+  
+    if (listKelasData.dosen.length === 0) {
       setDosenError(true);
       return; 
     }
     setDosenError(false);
-    
-    const matakuliahValid = initialMatakuliahs.some(
-      matkul => `${matkul.kode} - ${matkul.matakuliah}` === matakuliahData.matakuliah 
+  
+    const selectedMatakuliah = matakuliahsData.find(
+      matkul => `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah 
     );
-      if (!matakuliahValid) {
-        setMatakuliahError(true);
-        return;
-      }
-      setMatakuliahError(false);
-    
-    const namaMatkul = matakuliahData.matakuliah.split(' - ')[1] || matakuliahData.matakuliah;
-    setMatakuliahs([{ ...matakuliahData, matakuliah: namaMatkul, createdAt: Date.now() }, ...matakuliahs]);
-
+  
+    if (!selectedMatakuliah) {
+      setMatakuliahError(true);
+      return;
+    }
+    setMatakuliahError(false);
+  
+    // Ambil id_matkul dari mata kuliah yang dipilih
+    const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
+    const namaMatkul = selectedMatakuliah ? selectedMatakuliah.matakuliah : '';
+  
+    // Ambil id_dosen dari data dosen yang dipilih
+    const selectedDosenIds = dosenData
+      .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
+      .map(dosen => dosen.id_dosen);
+  
+    // Tambahkan console.log di sini untuk menampilkan semua data yang akan disimpan
+    console.log("Data kelas yang ditambahkan:", {
+      matakuliah: namaMatkul,
+      id_matkul: id_matkul,
+      kelas: listKelasData.kelas,
+      dosen: listKelasData.dosen,
+      id_dosen: selectedDosenIds,
+      kapasitas: listKelasData.kapasitas,
+      skala: listKelasData.skala,
+      createdAt: Date.now()
+    });
+  
+    setMatakuliahs([{ 
+      ...listKelasData, 
+      matakuliah: namaMatkul, 
+      id_matkul: id_matkul, 
+      id_dosen: selectedDosenIds,
+      createdAt: Date.now() 
+    }, ...matakuliahs]);
+  
     // Reset data
-    setMatakuliahData({
+    setListKelasData({
       matakuliah: '',
       kelas: '',
       dosen: [],
@@ -102,42 +136,62 @@ const AddKelas = () => {
       skala: '',
     });
     setIsAddModalOpen(false);
-}
-  
+  }  
 
   const handleDeleteMatakuliah = (matakuliahId, kelas) => {
-    setMatakuliahToDelete({ id: matakuliahId, kelas });
+    setKelasToDelete({ id: matakuliahId, kelas });
     setIsDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = () => {
-    setMatakuliahs(matakuliahs.filter(matakuliah => matakuliah.id !== matakuliahToDelete.id));
+    setMatakuliahs(matakuliahs.filter(matakuliah => matakuliah.id !== kelasToDelete.id));
     setIsDeleteDialogOpen(false);
   };
 
   useEffect(() => {
-    if (matakuliahData.matakuliah && matakuliahData.skala) {
+    // Fetch data for matakuliahs
+    fetch('http://127.0.0.1:5000/api/matakuliah')
+      .then(response => response.json())
+      .then(data => setMatakuliahsData(data))
+      .catch(error => console.error('Error fetching matakuliah data:', error));
+  
+    // Fetch data for dosen
+    fetch('http://127.0.0.1:5000/api/dosen')
+      .then(response => response.json())
+      .then(data => setDosenData(data))
+      .catch(error => console.error('Error fetching dosen data:', error));
+  
+    // Fetch data for kelas
+    fetch('http://127.0.0.1:5000/api/kelas')
+      .then(response => response.json())
+      .then(data => setKelasData(data))
+      .catch(error => console.error('Error fetching kelas data:', error));
+  }, []);
+  
+
+  useEffect(() => {
+    if (listKelasData.matakuliah && listKelasData.skala) {
       let newKelas = '';
-      const namaMatkul = matakuliahData.matakuliah.split(' - ')[1] || matakuliahData.matakuliah;
+      const namaMatkul = listKelasData.matakuliah.split(' - ')[1] || listKelasData.matakuliah;
       const existingClasses = matakuliahs
         .filter(item => item.matakuliah === namaMatkul)
         .map(item => item.kelas);
   
       setSkalaWarning('');
   
-      if (matakuliahData.skala === 'Nasional') {
+      if (listKelasData.skala === 'Nasional') {
         let kelasLetter = 'A';
         while (existingClasses.includes(`${namaMatkul}. ${kelasLetter}`)) {
           kelasLetter = String.fromCharCode(kelasLetter.charCodeAt(0) + 1);
         }
         newKelas = `${namaMatkul}. ${kelasLetter}`;
-      } else if (matakuliahData.skala === 'Inter') {
+      } else if (listKelasData.skala === 'Inter') {
         if (!existingClasses.includes(`${namaMatkul}. inter`)) {
           newKelas = `${namaMatkul}. inter`;
         } else {
           setSkalaWarning('Hanya bisa ada satu kelas "Inter" untuk mata kuliah ini.');
         }
-      } else if (matakuliahData.skala === 'MBKM') {
+      } else if (listKelasData.skala === 'MBKM') {
         if (!existingClasses.includes(`${namaMatkul}. MBKM`)) {
           newKelas = `${namaMatkul}. MBKM`;
         } else {
@@ -146,17 +200,17 @@ const AddKelas = () => {
       }
   
       // Update hanya `kelas` tanpa mengubah `matakuliah`
-      setMatakuliahData(prevData => ({
+      setListKelasData(prevData => ({
         ...prevData,
         kelas: newKelas || ''
       }));
     } else {
-      setMatakuliahData(prevData => ({
+      setListKelasData(prevData => ({
         ...prevData,
         kelas: '',
       }));
     }
-  }, [matakuliahData.matakuliah, matakuliahData.skala, matakuliahs]);
+  }, [listKelasData.matakuliah, listKelasData.skala, matakuliahs]);
   
 
   const columns = [
@@ -165,14 +219,15 @@ const AddKelas = () => {
     {
       accessorKey: 'dosen',
       header: 'Dosen',
-      Cell: ({ row }) => (
-        <ul style={{ padding: 0, listStyleType: 'none', margin: 0 }}>
-          {row.original.dosen.map((dosen, index) => (
-            <li key={index}>{dosen}</li>
-          ))}
-        </ul>
-      ),
-    },
+      Cell: ({ row }) => {
+        const dosenData = row.original.dosen;
+        return (
+          <div>
+            {dosenData}
+          </div>
+        );
+      }
+    },    
     { accessorKey: 'kapasitas', header: 'Kapasitas' },
     {
       accessorKey: "action",
@@ -184,10 +239,10 @@ const AddKelas = () => {
       ),
     },
   ];
-
+  
   const table = useMaterialReactTable({
     columns,
-    data: matakuliahs,
+    data: kelasData,  // Gunakan kelasData untuk menampilkan kelas
     enableRowSelection: false,
     initialState: {
       pagination: { pageSize: 10, pageIndex: 0 },
@@ -200,6 +255,7 @@ const AddKelas = () => {
     },
     paginationDisplayMode: 'pages',
   });
+  
 
   return (
     <div className='bg-db'>
@@ -246,6 +302,7 @@ const AddKelas = () => {
               </Table>
             </TableContainer>
             <MRT_TABLE_PAGINATION table={table} />
+
           </Stack>
         </div>
 
@@ -294,35 +351,39 @@ const AddKelas = () => {
 
                 <Grid item xs={12}>
                 <Autocomplete
-                options={initialMatakuliahs
-                  .filter(matkul => 
-                    (selectedJenjang === 'All' || matkul.jenjang === selectedJenjang) && 
-                    (selectedSemester === 'All' || matkul.semester === selectedSemester || matkul.semester === 'All')
-                  )
-                  .map((matkul) => `${matkul.kode} - ${matkul.matakuliah}`)}
-                renderInput={(params) => (
-                  <TextField 
-                    {...params} 
-                    label="Matakuliah" 
-                    name="matakuliah"
-                    error={matakuliahError} 
-                    helperText={matakuliahError ? "Silakan pilih mata kuliah yang valid dari daftar." : ""} 
-                    required 
-                  />
-                )}
-                value={matakuliahData.matakuliah}
-                onChange={(event, newValue) => {
-                  setMatakuliahData({ ...matakuliahData, matakuliah: newValue || '' });
-                  setMatakuliahError(false);
-                }}
-                onBlur={() => {
-                  const matakuliahValid = initialMatakuliahs.some(matkul => 
-                    `${matkul.kode} - ${matkul.matakuliah}` === matakuliahData.matakuliah
-                  );
-                  setMatakuliahError(!matakuliahValid); 
-                }}
-                freeSolo
-              />
+                  options={matakuliahsData
+                    .filter(matkul => 
+                      (selectedJenjang === 'All' || matkul.jenjang === selectedJenjang) && 
+                      (selectedSemester === 'All' || matkul.semester === selectedSemester || matkul.semester === 'All')
+                    )
+                    .map((matkul) => ({
+                      label: `${matkul.kode} - ${matkul.matakuliah}`,
+                      value: `${matkul.kode} - ${matkul.matakuliah}`,
+                    }))}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      label="Matakuliah" 
+                      name="matakuliah"
+                      error={matakuliahError} 
+                      helperText={matakuliahError ? "Silakan pilih mata kuliah yang valid dari daftar." : ""} 
+                      required 
+                    />
+                  )}
+                  value={listKelasData.matakuliah}
+                  onChange={(event, newValue) => {
+                    setListKelasData({ ...listKelasData, matakuliah: newValue ? newValue.value : '' });
+                    setMatakuliahError(false);
+                  }}
+                  onBlur={() => {
+                    const matakuliahValid = matakuliahsData.some(matkul => 
+                      `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah
+                    );
+                    setMatakuliahError(!matakuliahValid); 
+                  }}
+                  freeSolo
+                />
+
 
 
                 </Grid>
@@ -330,7 +391,7 @@ const AddKelas = () => {
                 <TextField select fullWidth 
                   label="Skala" 
                   name="skala" 
-                  value={matakuliahData.skala} 
+                  value={listKelasData.skala} 
                   onChange={handleChange} 
                   inputRef={skalaRef} 
                   error={!!skalaWarning} 
@@ -345,7 +406,7 @@ const AddKelas = () => {
                 <TextField fullWidth 
                   label="Kelas" 
                   name="kelas" 
-                  value={matakuliahData.kelas} 
+                  value={listKelasData.kelas} 
                   onChange={handleChange} 
                   inputRef={kelasRef} 
                   disabled={!!skalaWarning}
@@ -355,24 +416,24 @@ const AddKelas = () => {
               <Grid item xs={12}>
                 <Autocomplete
                   multiple
-                  options={initialDosen.map((dosen) => dosen.nama)}
+                  options={dosenData.map((dosen) => dosen.dosen)}
                   renderInput={(params) => (
                     <TextField 
                       {...params} 
                       label="Dosen" 
                       name="dosen" 
                       error={dosenError} 
-                      helperText={matakuliahData.dosen.length >= 3 ? "Batas maksimum 3 dosen." : ""}
+                      helperText={listKelasData.dosen.length >= 3 ? "Batas maksimum 3 dosen." : ""}
                       inputProps={{
                         ...params.inputProps,
-                        disabled: matakuliahData.dosen.length >= 3 // Nonaktifkan input jika sudah ada 3 dosen
+                        disabled: listKelasData.dosen.length >= 3 // Nonaktifkan input jika sudah ada 3 dosen
                       }}
                     />
                   )}
-                  value={matakuliahData.dosen}
+                  value={listKelasData.dosen}
                   onChange={(event, newValue) => {
                     if (newValue.length <= 3) { // Cek panjang array
-                      setMatakuliahData({ ...matakuliahData, dosen: newValue });
+                      setListKelasData({ ...listKelasData, dosen: newValue });
                       setDosenError(false); // Reset error jika ada input di dosen
                     }
                   }}
@@ -385,7 +446,7 @@ const AddKelas = () => {
                 )}
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Kapasitas" name="kapasitas" value={matakuliahData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
+                <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
               </Grid>
             </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" disabled={!!skalaWarning} sx={{ mt: 2 }}>Tambah</Button>
