@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete } from "react-icons/md";
@@ -12,20 +12,18 @@ import {
 } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
-import { initialRuangan } from '../../../assets/mockdata/dataRuangan';
 
 const Ruangan = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [ruanganToDelete, setRuanganToDelete] = useState({ id: '', namaRuangan: '' });
+  const [ruanganToDelete, setRuanganToDelete] = useState({ id_ruangan: '', name: '' });
   const [confirmationText, setConfirmationText] = useState('');
   const [ruanganData, setRuanganData] = useState({
-    nama: '',
+    name: '',
     kapasitas: '',
   });
 
-  const kapasitasRef = useRef();
-  const [ruangans, setRuangans] = useState(initialRuangan);
+  const [ruangans, setRuangans] = useState([]);
 
   const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
@@ -44,35 +42,82 @@ const Ruangan = () => {
     setRuanganData({ ...ruanganData, [name]: value });
   };
 
-  const handleAddRuangan = (e) => {
-    e.preventDefault();
-    setRuangans([{ ...ruanganData, createdAt: Date.now() }, ...ruangans]);
-    setRuanganData({
-      nama: '',
-      kapasitas: '',
-    });
-    setIsAddModalOpen(false);
+  const fetchRuangan = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/listruangan');
+      let data = await response.json();
+      console.log(data);
+      
+      data = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      setRuangans(data);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
   };
 
-  const handleDeleteRuangan = (ruanganId, nama) => {
-    setRuanganToDelete({ id: ruanganId, nama });
+useEffect(() => {
+  fetchRuangan();
+}, []);
+
+const handleAddRuangan = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/ruanganadd', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ruanganData),
+    });
+
+    if (response.ok) {
+      await fetchRuangan();
+      setRuanganData({ name: '', kapasitas: ''});
+      setIsAddModalOpen(false);
+    } else {
+      console.error('Failed to add matakuliah');
+    }
+  } catch (error) {
+    console.error("Error adding matakuliah: ", error);
+  }
+};
+  
+
+  const handleDeleteRuangan = (ruanganId, name) => {
+    setRuanganToDelete({ id_ruangan: ruanganId, name });
     setIsDeleteDialogOpen(true);
   };
-
-  const handleConfirmDelete = () => {
-    setRuangans(ruangans.filter(ruangan => ruangan.id !== ruanganToDelete.id));
-    setIsDeleteDialogOpen(false);
+  const handleConfirmDelete = async () => {
+    if (confirmationText === `delete`) {
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/ruangandelete/${ruanganToDelete.id_ruangan}`, {
+          method: 'DELETE',
+        });
+  
+        if (response.ok) {
+          setRuangans(ruangans.filter(ruangan => ruangan.id_ruangan !== ruanganToDelete.id_ruangan));
+          setIsDeleteDialogOpen(false);
+          setConfirmationText('');
+        } else {
+          console.error('Failed to delete admin');
+        }
+      } catch (error) {
+        console.error("Error deleting admin: ", error);
+      }
+    } else {
+      alert("Confirmation text does not match.");
+    }
   };
 
+
   const columns = [
-    { accessorKey: 'nama', header: 'Nama Ruangan' },
+    { accessorKey: 'name', header: 'Nama Ruangan' },
     { accessorKey: 'kapasitas', header: 'Kapasitas' },
     {
       accessorKey: "action",
       header: "Action",
       Cell: ({ row }) => (
         <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteRuangan(row.original.id, row.original.nama)} />
+          <MdDelete color='red' size={20} onClick={() => handleDeleteRuangan(row.original.id_ruangan)} />
         </div>
       ),
     },
@@ -144,7 +189,7 @@ const Ruangan = () => {
         <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
           <DialogTitle>Delete Ruangan</DialogTitle>
           <DialogContent>
-            <Typography>To confirm deletion, please enter: "delete-{ruanganToDelete.nama}"</Typography>
+            <Typography>To confirm deletion, please enter: "delete"</Typography>
             <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
           </DialogContent>
           <DialogActions>
@@ -161,10 +206,10 @@ const Ruangan = () => {
             <form onSubmit={handleAddRuangan}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <TextField fullWidth label="Nama Ruangan" name="nama" value={ruanganData.nama} onChange={handleChange} required />
+                  <TextField fullWidth label="Nama Ruangan" name="name" value={ruanganData.name} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
+                  <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} required />
                 </Grid>
               </Grid>
               <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>
