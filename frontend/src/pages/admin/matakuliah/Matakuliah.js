@@ -7,6 +7,7 @@ import { MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD, MRT_TablePag
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
 
+
 const AddMatakuliah = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -23,13 +24,6 @@ const AddMatakuliah = () => {
     jenjang: '',
   });
 
-  const kodeRef = useRef();
-  const matakuliahRef = useRef();
-  const sksRef = useRef();
-  const wpRef = useRef();
-  const semesterRef = useRef();
-  const jenjangRef = useRef();
-
   const fetchMatakuliahs = async () => {
     try {
       const response = await fetch('http://127.0.0.1:5000/api/matakuliah');
@@ -39,11 +33,12 @@ const AddMatakuliah = () => {
       data = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       setMatakuliahs(data);
-      // setMatakuliahs(prevdata => [data, ...prevdata]);
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
   };
+
+  
 
   useEffect(() => {
     fetchMatakuliahs();
@@ -70,29 +65,6 @@ const AddMatakuliah = () => {
     }));
   };
 
-  // const handleAddMatakuliah = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const response = await fetch('http://127.0.0.1:5000/api/matakuliah', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(matakuliahData),
-  //     });
-
-  //     if (response.ok) {
-  //       const addedData = await response.json(); 
-  //       setMatakuliahs(prevMatakuliahs => [addedData, ...prevMatakuliahs]);
-  //       setMatakuliahData({ kode: '', matakuliah: '', sks: '', wp: '', semester: '', jenjang: '' });
-  //       setIsAddModalOpen(false);
-  //     }else {
-  //       console.error('Failed to add matakuliah');
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding matakuliah: ", error);
-  //   }
-  // };
   const handleAddMatakuliah = async (e) => {
     e.preventDefault();
     try {
@@ -244,26 +216,26 @@ const AddMatakuliah = () => {
           <form onSubmit={handleAddMatakuliah}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField fullWidth label="Kode" name="kode" value={matakuliahData.kode} onChange={handleChange} inputRef={kodeRef} required />
+                <TextField fullWidth label="Kode" name="kode" value={matakuliahData.kode} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Matakuliah" name="matakuliah" value={matakuliahData.matakuliah} onChange={handleChange} inputRef={matakuliahRef} required />
+                <TextField fullWidth label="Matakuliah" name="matakuliah" value={matakuliahData.matakuliah} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="SKS" name="sks" value={matakuliahData.sks} onChange={handleChange} inputRef={sksRef} required>
+                <TextField select fullWidth label="SKS" name="sks" value={matakuliahData.sks} onChange={handleChange} required>
                   <MenuItem value="2">2</MenuItem>
                   <MenuItem value="3">3</MenuItem>
                   <MenuItem value="4">4</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="Jenjang" name="jenjang" value={matakuliahData.jenjang} onChange={handleChange} inputRef={jenjangRef} required>
+                <TextField select fullWidth label="Jenjang" name="jenjang" value={matakuliahData.jenjang} onChange={handleChange} required>
                   <MenuItem value="S1">Sarjana</MenuItem>
                   <MenuItem value="S2">Magister</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="W/P" name="wp" value={matakuliahData.wp} onChange={handleChange} inputRef={wpRef} required>
+                <TextField select fullWidth label="W/P" name="wp" value={matakuliahData.wp} onChange={handleChange} required>
                   <MenuItem value="W">Wajib</MenuItem>
                   <MenuItem value="P">Pilihan</MenuItem>
                 </TextField>
@@ -274,7 +246,6 @@ const AddMatakuliah = () => {
                   name="semester" 
                   value={matakuliahData.semester} 
                   onChange={handleChange} 
-                  inputRef={semesterRef} 
                   disabled={matakuliahData.wp === "P"}
                   required
                 >

@@ -26,10 +26,6 @@ const AddAdmin = () => {
     password: '',
   });
 
-  const nameRef = useRef();
-  const emailRef = useRef();
-  const passwordRef = useRef();
-  // const buttonRef = useRef(null);
   const [admins, setAdmins] = useState([]);
 
   const handleOpenAddModal = () => {
@@ -77,7 +73,7 @@ const AddAdmin = () => {
 
         if (response.ok) {
           await fetchUsers();
-          setAdminData({ name: '', email: '', password: '' }); // Reset input setelah tambah
+          setAdminData({ name: '', email: '', password: '' }); 
           setIsAddModalOpen(false);
             console.log(adminData)
         } else {
@@ -213,13 +209,13 @@ const columns = [
           <form onSubmit={handleAddAdmin}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField fullWidth label="Nama" name="name" value={adminData.name} onChange={handleChange} inputRef={nameRef} required />
+                <TextField fullWidth label="Nama" name="name" value={adminData.name} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Email" name="email" value={adminData.email} onChange={handleChange} inputRef={emailRef} required />
+                <TextField fullWidth label="Email" name="email" value={adminData.email} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Password" name="password" value={adminData.password} onChange={handleChange} inputRef={passwordRef} required />
+                <TextField fullWidth label="Password" name="password" value={adminData.password} onChange={handleChange} required />
               </Grid>
             </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>
