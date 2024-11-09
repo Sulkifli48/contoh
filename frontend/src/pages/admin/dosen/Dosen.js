@@ -15,12 +15,12 @@ import { IconButton } from '@mui/material';
 const Dosen = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [dosenToDelete, setDosenToDelete] = useState({ id_dosen: '', name: '' });
+  const [dosenToDelete, setDosenToDelete] = useState({ id_dosen: '', dosen: '' });
   const [confirmationText, setConfirmationText] = useState('');
 
   const [dosenData, setDosenData] = useState({
     nip: '',
-    name: '',
+    dosen: '',
     bidang: '', 
   });
 
@@ -55,7 +55,7 @@ const handleAddDosen = async (e) => {
 
     if (response.ok) {
       await fetchDosens();
-      setDosenData({ nip: '', name: '', bidang: ''});
+      setDosenData({ nip: '', dosen: '', bidang: ''});
       setIsAddModalOpen(false);
     } else {
       console.error('Failed to add matakuliah');
@@ -114,7 +114,7 @@ const handleAddDosen = async (e) => {
 
   const columns = [
     { accessorKey: 'nip', header: 'Nip' },
-    { accessorKey: 'name', header: 'Nama' },
+    { accessorKey: 'dosen', header: 'Nama' },
     { accessorKey: 'bidang', header: 'Bidang' }, 
     {
       accessorKey: "action",
@@ -213,7 +213,7 @@ const handleAddDosen = async (e) => {
                 <TextField fullWidth label="Nip" name="nip" value={dosenData.nip} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Nama" name="name" value={dosenData.name} onChange={handleChange} required />
+                <TextField fullWidth label="Nama" name="dosen" value={dosenData.name} onChange={handleChange} required />
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Bidang" name="bidang" value={dosenData.bidang} onChange={handleChange} required />
