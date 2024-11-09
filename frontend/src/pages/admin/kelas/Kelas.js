@@ -38,7 +38,7 @@ import CloseIcon from '@mui/icons-material/Close';
 const AddKelas = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [kelasToDelete, setKelasToDelete] = useState({ id: '', kelas: '' });
+  const [kelasToDelete, setKelasToDelete] = useState({ id_kelas: '', kelas: '' });
   const [confirmationText, setConfirmationText] = useState('');
   
   const [selectedSemester, setSelectedSemester] = useState('All');
@@ -79,17 +79,22 @@ const AddKelas = () => {
     setListKelasData({ ...listKelasData, [name]: value });
   };
 
-  const handleAddKelas = (e) => {
+  const handleAddKelas = async (e) => {
     e.preventDefault();
   
+    // Validasi input dosen
     if (listKelasData.dosen.length === 0) {
       setDosenError(true);
-      return; 
+      return;
     }
     setDosenError(false);
   
+    const selectedDosenIds = dosenData
+      .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
+      .map(dosen => dosen.id_dosen);
+  
     const selectedMatakuliah = matakuliahsData.find(
-      matkul => `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah 
+      matkul => `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah
     );
   
     if (!selectedMatakuliah) {
@@ -98,55 +103,78 @@ const AddKelas = () => {
     }
     setMatakuliahError(false);
   
-    // Ambil id_matkul dari mata kuliah yang dipilih
     const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
     const namaMatkul = selectedMatakuliah ? selectedMatakuliah.matakuliah : '';
   
-    // Ambil id_dosen dari data dosen yang dipilih
-    const selectedDosenIds = dosenData
-      .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
-      .map(dosen => dosen.id_dosen);
-  
-    // Tambahkan console.log di sini untuk menampilkan semua data yang akan disimpan
-    console.log("Data kelas yang ditambahkan:", {
-      matakuliah: namaMatkul,
-      id_matkul: id_matkul,
-      kelas: listKelasData.kelas,
-      dosen: listKelasData.dosen,
-      id_dosen: selectedDosenIds,
-      kapasitas: listKelasData.kapasitas,
+    // Cek data yang akan dikirim ke backend
+    const dataToSend = {
+      matkul_id: id_matkul,
       skala: listKelasData.skala,
-      createdAt: Date.now()
-    });
+      kelas: listKelasData.kelas,
+      dosen_ids: selectedDosenIds,
+      kapasitas: listKelasData.kapasitas,
+    };
   
-    setMatakuliahs([{ 
-      ...listKelasData, 
-      matakuliah: namaMatkul, 
-      id_matkul: id_matkul, 
-      id_dosen: selectedDosenIds,
-      createdAt: Date.now() 
-    }, ...matakuliahs]);
+    console.log("Data yang akan dikirim ke backend:", dataToSend); // Log data yang dikirim
   
-    // Reset data
-    setListKelasData({
-      matakuliah: '',
-      kelas: '',
-      dosen: [],
-      kapasitas: '',
-      skala: '',
-    });
-    setIsAddModalOpen(false);
-  }  
+    try {
+      // Kirim data ke backend
+      const response = await fetch('http://127.0.0.1:5000/api/kelas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend),
+      });
+  
+      const data = await response.json();
+  
+      // Menambahkan data kelas baru ke state lokal setelah berhasil menambahkannya
+      setKelasData([...kelasData, data]);
+      setListKelasData({
+        matakuliah: '',
+        kelas: '',
+        dosen: [],
+        kapasitas: '',
+        skala: '',
+      });
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Error adding kelas:', error);
+    }
+  };
+  
+  
 
   const handleDeleteMatakuliah = (matakuliahId, kelas) => {
-    setKelasToDelete({ id: matakuliahId, kelas });
+    setKelasToDelete({ id_kelas: matakuliahId, kelas });
     setIsDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    setMatakuliahs(matakuliahs.filter(matakuliah => matakuliah.id !== kelasToDelete.id));
-    setIsDeleteDialogOpen(false);
-  };
+  const handleConfirmDelete = async () => {
+    if (confirmationText === `delete`) {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/api/kelasdelete/${kelasToDelete.id_kelas}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                // Perbarui state untuk menghapus kelas dari daftar kelas yang ada
+                setKelasData(kelasData.filter(kelas => kelas.id_kelas !== kelasToDelete.id_kelas));
+                setIsDeleteDialogOpen(false); // Tutup dialog setelah berhasil
+                setConfirmationText(''); // Reset teks konfirmasi
+            } else {
+                console.error('Gagal menghapus kelas');
+            }
+        } catch (error) {
+            console.error("Error menghapus kelas: ", error);
+        }
+    } else {
+        alert("Teks konfirmasi tidak cocok.");
+    }
+};
+
+
 
   useEffect(() => {
     // Fetch data for matakuliahs
@@ -156,13 +184,13 @@ const AddKelas = () => {
       .catch(error => console.error('Error fetching matakuliah data:', error));
   
     // Fetch data for dosen
-    fetch('http://127.0.0.1:5000/api/dosen')
+    fetch('http://127.0.0.1:5000/api/listdosen')
       .then(response => response.json())
       .then(data => setDosenData(data))
       .catch(error => console.error('Error fetching dosen data:', error));
   
     // Fetch data for kelas
-    fetch('http://127.0.0.1:5000/api/kelas')
+    fetch('http://127.0.0.1:5000/api/listkelas')
       .then(response => response.json())
       .then(data => setKelasData(data))
       .catch(error => console.error('Error fetching kelas data:', error));
@@ -234,7 +262,7 @@ const AddKelas = () => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id, row.original.kelas)} />
+          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_kelas)} />
         </div>
       ),
     },
@@ -309,12 +337,12 @@ const AddKelas = () => {
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Matakuliah</DialogTitle>
         <DialogContent>
-          <Typography>To confirm deletion, please enter: "Delete"</Typography>
+          <Typography>To confirm deletion, please enter: "delete"</Typography>
           <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} disabled={confirmationText !== 'Delete'}>Delete</Button>
+          <Button onClick={handleConfirmDelete} disabled={confirmationText !== 'delete'}>delete</Button>
         </DialogActions>
       </Dialog>
 
@@ -383,9 +411,6 @@ const AddKelas = () => {
                   }}
                   freeSolo
                 />
-
-
-
                 </Grid>
               <Grid item xs={12}>
                 <TextField select fullWidth 
@@ -414,36 +439,14 @@ const AddKelas = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Autocomplete
-                  multiple
-                  options={dosenData.map((dosen) => dosen.dosen)}
-                  renderInput={(params) => (
-                    <TextField 
-                      {...params} 
-                      label="Dosen" 
-                      name="dosen" 
-                      error={dosenError} 
-                      helperText={listKelasData.dosen.length >= 3 ? "Batas maksimum 3 dosen." : ""}
-                      inputProps={{
-                        ...params.inputProps,
-                        disabled: listKelasData.dosen.length >= 3 // Nonaktifkan input jika sudah ada 3 dosen
-                      }}
-                    />
-                  )}
-                  value={listKelasData.dosen}
-                  onChange={(event, newValue) => {
-                    if (newValue.length <= 3) { // Cek panjang array
-                      setListKelasData({ ...listKelasData, dosen: newValue });
-                      setDosenError(false); // Reset error jika ada input di dosen
-                    }
-                  }}
-                  freeSolo
-                />
-                {dosenError && (
-                  <FormHelperText error>
-                    Silakan pilih setidaknya satu dosen.
-                  </FormHelperText>
-                )}
+              <Autocomplete
+  multiple
+  options={dosenData.map(dosen => dosen.dosen)}
+  value={listKelasData.dosen}
+  onChange={(event, newValue) => setListKelasData({ ...listKelasData, dosen: newValue })}
+  renderInput={(params) => <TextField {...params} label="Dosen" />}
+/>
+                
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
