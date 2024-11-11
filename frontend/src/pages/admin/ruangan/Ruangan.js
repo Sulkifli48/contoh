@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete } from "react-icons/md";
@@ -82,8 +82,8 @@ const handleAddRuangan = async (e) => {
 };
   
 
-  const handleDeleteRuangan = (ruanganId, name) => {
-    setRuanganToDelete({ id_ruangan: ruanganId, name });
+  const handleDeleteRuangan = (id_ruangan, name) => {
+    setRuanganToDelete({ id_ruangan, name });
     setIsDeleteDialogOpen(true);
   };
   const handleConfirmDelete = async () => {
@@ -117,7 +117,7 @@ const handleAddRuangan = async (e) => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteRuangan(row.original.id_ruangan)} />
+          <MdDelete color='red' size={20} onClick={() => handleDeleteRuangan(row.original.id_ruangan, row.original.name)} />
         </div>
       ),
     },
@@ -188,9 +188,9 @@ const handleAddRuangan = async (e) => {
 
         <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
           <DialogTitle>Delete Ruangan</DialogTitle>
-          <DialogContent>
-            <Typography>To confirm deletion, please enter: "delete"</Typography>
-            <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
+          <DialogContent sx={{ minWidth: 400 }}>
+            <Typography>{ruanganToDelete.name}</Typography>
+            <TextField fullWidth label="Entar `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDeleteDialog}>Cancel</Button>

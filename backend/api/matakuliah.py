@@ -4,7 +4,7 @@ from datetime import datetime
 
 matakuliah_bp = Blueprint('matakuliah', __name__)
 
-@matakuliah_bp.route('/matakuliah', methods=['GET'])
+@matakuliah_bp.route('/listmatakuliah', methods=['GET'])
 def get_matakuliah():
     cur = mysql.connection.cursor()
     cur.execute("SELECT id_matkul, kode, matakuliah, sks, jenjang, wp, semester, createdAt FROM matakuliah_db")
@@ -26,7 +26,7 @@ def get_matakuliah():
     
     return jsonify(data), 200
 
-@matakuliah_bp.route('/matakuliah', methods=['POST'])
+@matakuliah_bp.route('/matakuliahadd', methods=['POST'])
 def add_matakuliah():
     data = request.get_json()
     kode = data['kode']

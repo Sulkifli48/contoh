@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, 
+  // useRef,
+   useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete } from "react-icons/md";
@@ -11,7 +13,7 @@ import { IconButton } from '@mui/material';
 const AddMatakuliah = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [matakuliahToDelete, setMatakuliahToDelete] = useState({ id_matkul: '', kode: '' });
+  const [matakuliahToDelete, setMatakuliahToDelete] = useState({ id_matkul: '', matakuliah: '' });
   const [confirmationText, setConfirmationText] = useState('');
 
   const [matakuliahs, setMatakuliahs] = useState([]);
@@ -26,7 +28,7 @@ const AddMatakuliah = () => {
 
   const fetchMatakuliahs = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/matakuliah');
+      const response = await fetch('http://127.0.0.1:5000/api/listmatakuliah');
       let data = await response.json();
       console.log(data);
       
@@ -37,8 +39,6 @@ const AddMatakuliah = () => {
       console.error("Error fetching data: ", error);
     }
   };
-
-  
 
   useEffect(() => {
     fetchMatakuliahs();
@@ -68,7 +68,7 @@ const AddMatakuliah = () => {
   const handleAddMatakuliah = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/matakuliah', {
+      const response = await fetch('http://127.0.0.1:5000/api/matakuliahadd', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(matakuliahData),
@@ -87,13 +87,13 @@ const AddMatakuliah = () => {
   };
   
 
-  const handleDeleteMatakuliah = (id_matkul, kode) => {
-    setMatakuliahToDelete({ id_matkul, kode });
+  const handleDeleteMatakuliah = (id_matkul, matakuliah) => {
+    setMatakuliahToDelete({ id_matkul, matakuliah });
     setIsDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (confirmationText === `delete-${matakuliahToDelete.kode}`) {
+    if (confirmationText === `delete`) {
       try {
         const response = await fetch(`http://127.0.0.1:5000/api/matakuliah/${matakuliahToDelete.id_matkul}`, {
           method: 'DELETE',
@@ -126,7 +126,7 @@ const AddMatakuliah = () => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_matkul, row.original.kode)} />
+          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_matkul, row.original.matakuliah)} />
         </div>
       ),
     },
@@ -198,9 +198,10 @@ const AddMatakuliah = () => {
 
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Matakuliah</DialogTitle>
-        <DialogContent>
-          <Typography>To confirm deletion, please enter: "delete-{matakuliahToDelete.kode}"</Typography>
-          <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
+        <DialogContent sx={{ minWidth: 400 }}>
+          {/* <Typography>are you sure you want to delete :</Typography> */}
+          <Typography>{matakuliahToDelete.matakuliah}</Typography>
+          <TextField fullWidth label="Enter `delete` to Confirm." value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./add-admin.css";
 // import { FaEdit } from "react-icons/fa";
@@ -8,7 +8,6 @@ import {
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
   MRT_TablePagination as MRT_TABLE_BODY_CELL_VALUE, 
   MRT_TableBodyCellValue as MRT_TABLE_PAGINATION,
-  // MRT_ToolbarAlertBanner, 
   flexRender, 
   useMaterialReactTable } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
@@ -119,7 +118,7 @@ const columns = [
     header: "Action",
     Cell: ({ row }) => (
       <div>
-        <MdDelete color='red' size={20} onClick={() => handleDeleteAdmin(row.original.id_users)} />
+        <MdDelete color='red' size={20} onClick={() => handleDeleteAdmin(row.original.id_users, row.original.name)} />
       </div>
     ),
   },
@@ -191,9 +190,9 @@ const columns = [
 
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Admin</DialogTitle>
-        <DialogContent>
-          <Typography>To confirm deletion, please enter: "delete"</Typography>
-          <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
+        <DialogContent sx={{ minWidth: 400 }}>
+          <Typography>{adminToDelete.name}</Typography>
+          <TextField fullWidth label="Enter `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>

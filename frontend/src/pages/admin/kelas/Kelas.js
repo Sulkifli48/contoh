@@ -23,7 +23,7 @@ import {
   DialogContent, 
   DialogActions, 
   Autocomplete, 
-  FormHelperText,
+  // FormHelperText,
   IconButton,
 } from '@mui/material';
 import {  
@@ -45,13 +45,12 @@ const AddKelas = () => {
   const [selectedJenjang, setSelectedJenjang] = useState('All');
   const [skalaWarning, setSkalaWarning] = useState('');
   
-  const [matakuliahs, setMatakuliahs] = useState([]);
+  // const [matakuliahs, setMatakuliahs] = useState([]);
   const [matakuliahError, setMatakuliahError] = useState(false);
   const [matakuliahsData, setMatakuliahsData] = useState([]);
   
   const [dosenData, setDosenData] = useState([]);
   const [dosenError, setDosenError] = useState(false);
-
 
   const [kelasData, setKelasData] = useState([]);
   const [listKelasData, setListKelasData] = useState({
@@ -61,6 +60,25 @@ const AddKelas = () => {
     kapasitas: '',
     skala: '',
   });
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/api/listmatakuliah')
+      .then(response => response.json())
+      .then(data => setMatakuliahsData(data))
+      .catch(error => console.error('Error fetching matakuliah data:', error));
+  
+    // Fetch data for dosen
+    fetch('http://127.0.0.1:5000/api/listdosen')
+      .then(response => response.json())
+      .then(data => setDosenData(data))
+      .catch(error => console.error('Error fetching dosen data:', error));
+  
+    // Fetch data for kelas
+    fetch('http://127.0.0.1:5000/api/listkelas')
+      .then(response => response.json())
+      .then(data => setKelasData(data))
+      .catch(error => console.error('Error fetching kelas data:', error));
+  }, []);
 
   const kelasRef = useRef();
   const kapasitasRef = useRef();
@@ -104,9 +122,8 @@ const AddKelas = () => {
     setMatakuliahError(false);
   
     const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
-    const namaMatkul = selectedMatakuliah ? selectedMatakuliah.matakuliah : '';
   
-    // Cek data yang akan dikirim ke backend
+    // Data yang akan dikirim ke backend
     const dataToSend = {
       matkul_id: id_matkul,
       skala: listKelasData.skala,
@@ -115,11 +132,8 @@ const AddKelas = () => {
       kapasitas: listKelasData.kapasitas,
     };
   
-    console.log("Data yang akan dikirim ke backend:", dataToSend); // Log data yang dikirim
-  
     try {
-      // Kirim data ke backend
-      const response = await fetch('http://127.0.0.1:5000/api/kelas', {
+      const response = await fetch('http://127.0.0.1:5000/api/kelasadd', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,27 +141,32 @@ const AddKelas = () => {
         body: JSON.stringify(dataToSend),
       });
   
-      const data = await response.json();
-  
-      // Menambahkan data kelas baru ke state lokal setelah berhasil menambahkannya
-      setKelasData([...kelasData, data]);
-      setListKelasData({
-        matakuliah: '',
-        kelas: '',
-        dosen: [],
-        kapasitas: '',
-        skala: '',
-      });
-      setIsAddModalOpen(false);
+      if (response.ok) {
+        // After adding, re-fetch all classes from the backend
+        const updatedKelasData = await fetch('http://127.0.0.1:5000/api/listkelas')
+          .then(res => res.json())
+          .catch(error => console.error('Error fetching kelas data:', error));
+        // Update state with the fetched kelas data
+        setKelasData(updatedKelasData);
+        setListKelasData({
+          matakuliah: '',
+          kelas: '',
+          dosen: [],
+          kapasitas: '',
+          skala: '',
+        });
+        setIsAddModalOpen(false);
+      } else {
+        console.error('Failed to add kelas');
+      }
     } catch (error) {
       console.error('Error adding kelas:', error);
     }
   };
   
-  
 
-  const handleDeleteMatakuliah = (matakuliahId, kelas) => {
-    setKelasToDelete({ id_kelas: matakuliahId, kelas });
+  const handleDeleteMatakuliah = (id_kelas, kelas) => {
+    setKelasToDelete({ id_kelas, kelas });
     setIsDeleteDialogOpen(true);
   };
 
@@ -172,36 +191,13 @@ const AddKelas = () => {
     } else {
         alert("Teks konfirmasi tidak cocok.");
     }
-};
-
-
-
-  useEffect(() => {
-    // Fetch data for matakuliahs
-    fetch('http://127.0.0.1:5000/api/matakuliah')
-      .then(response => response.json())
-      .then(data => setMatakuliahsData(data))
-      .catch(error => console.error('Error fetching matakuliah data:', error));
-  
-    // Fetch data for dosen
-    fetch('http://127.0.0.1:5000/api/listdosen')
-      .then(response => response.json())
-      .then(data => setDosenData(data))
-      .catch(error => console.error('Error fetching dosen data:', error));
-  
-    // Fetch data for kelas
-    fetch('http://127.0.0.1:5000/api/listkelas')
-      .then(response => response.json())
-      .then(data => setKelasData(data))
-      .catch(error => console.error('Error fetching kelas data:', error));
-  }, []);
-  
+};  
 
   useEffect(() => {
     if (listKelasData.matakuliah && listKelasData.skala) {
       let newKelas = '';
       const namaMatkul = listKelasData.matakuliah.split(' - ')[1] || listKelasData.matakuliah;
-      const existingClasses = matakuliahs
+      const existingClasses = kelasData
         .filter(item => item.matakuliah === namaMatkul)
         .map(item => item.kelas);
   
@@ -238,7 +234,7 @@ const AddKelas = () => {
         kelas: '',
       }));
     }
-  }, [listKelasData.matakuliah, listKelasData.skala, matakuliahs]);
+  }, [listKelasData.matakuliah, listKelasData.skala, kelasData]);
   
 
   const columns = [
@@ -262,7 +258,7 @@ const AddKelas = () => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
-          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_kelas)} />
+          <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_kelas, row.original.kelas)} />
         </div>
       ),
     },
@@ -335,10 +331,11 @@ const AddKelas = () => {
         </div>
 
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Delete Matakuliah</DialogTitle>
-        <DialogContent>
-          <Typography>To confirm deletion, please enter: "delete"</Typography>
-          <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
+        <DialogTitle>Delete Kelas</DialogTitle>
+        <DialogContent sx={{ minWidth: 400 }}>
+        {/* <Typography>Are you sure you want to delete :</Typography> */}
+        <Typography>{kelasToDelete.kelas}</Typography>
+          <TextField fullWidth label="Enter `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
@@ -353,6 +350,7 @@ const AddKelas = () => {
             </Typography>
             <form onSubmit={handleAddKelas}>
               <Grid container spacing={2}>
+                {/* pilihan jenjang */}
                 <Grid item xs={6}>
                   <TextField select fullWidth 
                     label="Jenjang" 
@@ -365,6 +363,7 @@ const AddKelas = () => {
                     <MenuItem value="S2">S2</MenuItem>
                   </TextField>
                 </Grid>
+                {/* pilihan semester */}
                 <Grid item xs={6}>
                   <TextField select fullWidth 
                     label="Semester" 
@@ -376,7 +375,7 @@ const AddKelas = () => {
                     <MenuItem value="Genap">Genap</MenuItem>
                   </TextField>
                 </Grid>
-
+                {/* input matakuliah */}
                 <Grid item xs={12}>
                 <Autocomplete
                   options={matakuliahsData
@@ -412,46 +411,69 @@ const AddKelas = () => {
                   freeSolo
                 />
                 </Grid>
-              <Grid item xs={12}>
-                <TextField select fullWidth 
-                  label="Skala" 
-                  name="skala" 
-                  value={listKelasData.skala} 
-                  onChange={handleChange} 
-                  inputRef={skalaRef} 
-                  error={!!skalaWarning} 
-                  helperText={skalaWarning} 
-                required>
-                  <MenuItem value="Nasional">Nasional</MenuItem>
-                  <MenuItem value="Inter">Internasional</MenuItem>
-                  <MenuItem value="MBKM">MBKM</MenuItem>
-                </TextField>
+                {/* input skala */}
+                <Grid item xs={12}>
+                  <TextField select fullWidth 
+                    label="Skala" 
+                    name="skala" 
+                    value={listKelasData.skala} 
+                    onChange={handleChange} 
+                    inputRef={skalaRef} 
+                    error={!!skalaWarning} 
+                    helperText={skalaWarning} 
+                  required>
+                    <MenuItem value="Nasional">Nasional</MenuItem>
+                    <MenuItem value="Inter">Internasional</MenuItem>
+                    <MenuItem value="MBKM">MBKM</MenuItem>
+                  </TextField>
+                </Grid>
+                {/* input kelas */}
+                <Grid item xs={12}>
+                  <TextField fullWidth 
+                    label="Kelas" 
+                    name="kelas" 
+                    value={listKelasData.kelas} 
+                    onChange={handleChange} 
+                    inputRef={kelasRef} 
+                    disabled={!!skalaWarning}
+                    required 
+                  />
+                </Grid>
+                {/* input dosen */}
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={dosenData.map((dosen) => dosen.dosen)}
+                    renderInput={(params) => (
+                      <TextField 
+                        {...params} 
+                        label="Dosen" 
+                        name="dosen"
+                        error={dosenError} 
+                        helperText={dosenError ? "Silakan pilih maksimal 3 dosen." : ""} 
+                        // required 
+                      />
+                    )}
+                    value={listKelasData.dosen}
+                    onChange={(event, newValue) => {
+                      if (newValue.length <= 3) { // Memastikan maksimal 3 dosen yang dipilih
+                        setListKelasData({ ...listKelasData, dosen: newValue });
+                        setDosenError(false);
+                      } else {
+                        setDosenError(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      setDosenError(listKelasData.dosen.length === 0 || listKelasData.dosen.length > 3);
+                    }}
+                    disableCloseOnSelect
+                  />
+                </Grid>
+                {/* input kapasitas */}
+                <Grid item xs={12}>
+                  <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
+                </Grid>
               </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth 
-                  label="Kelas" 
-                  name="kelas" 
-                  value={listKelasData.kelas} 
-                  onChange={handleChange} 
-                  inputRef={kelasRef} 
-                  disabled={!!skalaWarning}
-                  required 
-                />
-              </Grid>
-              <Grid item xs={12}>
-              <Autocomplete
-  multiple
-  options={dosenData.map(dosen => dosen.dosen)}
-  value={listKelasData.dosen}
-  onChange={(event, newValue) => setListKelasData({ ...listKelasData, dosen: newValue })}
-  renderInput={(params) => <TextField {...params} label="Dosen" />}
-/>
-                
-              </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
-              </Grid>
-            </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" disabled={!!skalaWarning} sx={{ mt: 2 }}>Tambah</Button>
           </form>
         </Box>
@@ -462,4 +484,3 @@ const AddKelas = () => {
 };
 
 export default AddKelas;
-

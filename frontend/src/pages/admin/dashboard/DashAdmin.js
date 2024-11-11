@@ -23,10 +23,10 @@ const DashAdmin = () => {
       try {
         // Buat array untuk menyimpan promosi dari setiap fetch
         const responses = await Promise.all([
-          fetch('http://127.0.0.1:5000/api/matakuliah'),
+          fetch('http://127.0.0.1:5000/api/listmatakuliah'),
           fetch('http://127.0.0.1:5000/api/listdosen'),
           fetch('http://127.0.0.1:5000/api/listruangan'),
-          fetch('http://127.0.0.1:5000/api/kelas')
+          fetch('http://127.0.0.1:5000/api/listkelas')
         ]);
         
         // Cek setiap respons secara terpisah
