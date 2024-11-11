@@ -43,7 +43,7 @@ def get_kelas():
     ]
     return jsonify(data), 200
 
-@kelas_bp.route('/kelas', methods=['POST'])
+@kelas_bp.route('/kelasadd', methods=['POST'])
 def add_kelas():
     try:
         data = request.get_json()
