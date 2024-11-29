@@ -1,19 +1,20 @@
 import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import './Sidebar-category.css';
-import { Link, useNavigate } from 'react-router-dom';
 
 export default function Sidebar() {
   const name = sessionStorage.getItem("name");
   const email = sessionStorage.getItem("email");
   const [isOpen, setIsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  
+
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   const navigate = useNavigate();
+  const location = useLocation(); // Mengambil path URL saat ini
   const handleLogout = () => {
     setLoggingOut(true);
     sessionStorage.removeItem("user_id");
@@ -37,51 +38,51 @@ export default function Sidebar() {
         <i className='bx bx-menu' id="btn" onClick={toggleSidebar}></i>
       </div>
       <ul className="nav-list">
-        <li>
+        <li className={location.pathname === '/admin/dashboard' ? 'active' : ''}>
           <Link to="/admin/dashboard">
             <i className='bx bx-grid-alt'></i>
             <span className="links_name">Dashboard</span>
           </Link>
           <span className="tooltip">Dashboard</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/add-admin' ? 'active' : ''}>
           <Link to="/admin/add-admin">
-            <i class='bx bx-support'></i>
+            <i className='bx bx-support'></i>
             <span className="links_name">Admin</span>
           </Link>
           <span className="tooltip">Admin</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/dosen' ? 'active' : ''}>
           <Link to="/admin/dosen">
-            <i class='bx bxs-group'></i>
+            <i className='bx bxs-group'></i>
             <span className="links_name">Dosen</span>
           </Link>
           <span className="tooltip">Dosen</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/ruangan' ? 'active' : ''}>
           <Link to="/admin/ruangan">
-            <i class='bx bxs-home-smile'></i>
+            <i className='bx bxs-home-smile'></i>
             <span className="links_name">Ruangan</span>
           </Link>
           <span className="tooltip">Ruangan</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/matakuliah' ? 'active' : ''}>
           <Link to="/admin/matakuliah">
-            <i class='bx bxs-graduation'></i>
+            <i className='bx bxs-graduation'></i>
             <span className="links_name">Matakuliah</span>
           </Link>
           <span className="tooltip">Matakuliah</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/kelas' ? 'active' : ''}>
           <Link to="/admin/kelas">
-            <i class='bx bxs-book-open'/>
+            <i className='bx bxs-book-open'></i>
             <span className="links_name">Kelas</span>
           </Link>
           <span className="tooltip">Kelas</span>
         </li>
-        <li>
+        <li className={location.pathname === '/admin/jadwal' ? 'active' : ''}>
           <Link to="/admin/jadwal">
-            <i class='bx bxs-time-five' ></i>
+            <i className='bx bxs-time-five'></i>
             <span className="links_name">Jadwal</span>
           </Link>
           <span className="tooltip">Jadwal</span>

@@ -100,6 +100,10 @@ const Home = () => {
     return (
         <div>
             <Header />
+                <div className='head'>
+                    <h1 className='head-h1'>Departemen Informatika Universitas Hasanuddin</h1>
+                    <h2 className='head-h2'>Jadwal Perkuliahan Semester Ganjil 2024/2025</h2>
+                </div>
             <div className="container">
                 <div className="day-select">
                     <label htmlFor="day">Select a day:</label>
@@ -174,7 +178,6 @@ const Home = () => {
 
                 </table>
                 </div>
-            <Footer />
         </div>
     );
 };

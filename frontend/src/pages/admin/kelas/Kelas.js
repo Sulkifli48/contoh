@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 // import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
+import { MdDelete, MdEdit } from "react-icons/md";
 import { 
   Box, 
   Stack, 
@@ -40,9 +40,6 @@ const AddKelas = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [kelasToDelete, setKelasToDelete] = useState({ id_kelas: '', kelas: '' });
   const [confirmationText, setConfirmationText] = useState('');
-  
-  const [selectedSemester, setSelectedSemester] = useState('All');
-  const [selectedJenjang, setSelectedJenjang] = useState('All');
   const [skalaWarning, setSkalaWarning] = useState('');
   
   // const [matakuliahs, setMatakuliahs] = useState([]);
@@ -51,6 +48,7 @@ const AddKelas = () => {
   
   const [dosenData, setDosenData] = useState([]);
   const [dosenError, setDosenError] = useState(false);
+  const [dosenErrors, setDosenErrors] = useState(false);
 
   const [kelasData, setKelasData] = useState([]);
   const [listKelasData, setListKelasData] = useState({
@@ -61,30 +59,111 @@ const AddKelas = () => {
     skala: '',
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [kelasToEdit, setKelasToEdit] = useState({
+    id_kelas: '',
+    matakuliah: '',
+    kelas: '',
+    dosen: [],
+    kapasitas: '',
+    skala: '',
+  });
+
+  
+  const fetchData = async (endpoint, setState) => {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      setState(data);
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+    }
+  };
+  
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/listmatakuliah')
-      .then(response => response.json())
-      .then(data => setMatakuliahsData(data))
-      .catch(error => console.error('Error fetching matakuliah data:', error));
-  
-    // Fetch data for dosen
-    fetch('http://127.0.0.1:5000/api/listdosen')
-      .then(response => response.json())
-      .then(data => setDosenData(data))
-      .catch(error => console.error('Error fetching dosen data:', error));
-  
-    // Fetch data for kelas
-    fetch('http://127.0.0.1:5000/api/listkelas')
-      .then(response => response.json())
-      .then(data => setKelasData(data))
-      .catch(error => console.error('Error fetching kelas data:', error));
+    fetchData('http://127.0.0.1:5000/api/listmatakuliah', setMatakuliahsData);
+    fetchData('http://127.0.0.1:5000/api/listdosen', setDosenData);
+    fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
   }, []);
 
-  const kelasRef = useRef();
-  const kapasitasRef = useRef();
-  const skalaRef = useRef();
+  const handleEditKelas = (kelas) => {
+    setKelasToEdit({
+      id_kelas: kelas.id_kelas,
+      matakuliah: `${kelas.matakuliah}`, 
+      kelas: kelas.kelas,
+      dosen: kelas.dosen.split('\n'),
+      kapasitas: kelas.kapasitas,
+      skala: kelas.skala,
+    });
+    setIsEditModalOpen(true);
+  };
+  
+  const handleUpdateKelas = async (e) => {
+    e.preventDefault();
 
-  const handleOpenAddModal = () => setIsAddModalOpen(true);
+    if (kelasToEdit.dosen.length === 0) {
+      setDosenErrors(true);
+      return;
+    }
+    setDosenErrors(false);
+
+    try {
+      // Ambil ID matakuliah dari nama
+      const selectedMatakuliah = matakuliahsData.find(
+        matkul => matkul.matakuliah === kelasToEdit.matakuliah
+      );
+      const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
+      if (!id_matkul) {
+        console.error('Matakuliah tidak ditemukan!');
+        return;
+      }
+
+      const selectedDosenIds = dosenData
+        .filter(dosen => kelasToEdit.dosen.includes(dosen.dosen))
+        .sort((a, b) => kelasToEdit.dosen.indexOf(a.dosen) - kelasToEdit.dosen.indexOf(b.dosen)) 
+        .map(dosen => dosen.id_dosen);
+
+      const dataToSend = {
+        matkul_id: id_matkul,
+        skala: kelasToEdit.skala,
+        kelas: kelasToEdit.kelas,
+        dosen_ids: selectedDosenIds,
+        kapasitas: kelasToEdit.kapasitas,
+      };
+
+      const response = await fetch(`http://127.0.0.1:5000/api/kelasedit/${kelasToEdit.id_kelas}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (response.ok) {
+        const updatedKelasData = await fetch('http://127.0.0.1:5000/api/listkelas')
+          .then(res => res.json())
+          .catch(err => console.error('Error fetching updated kelas:', err));
+
+        setKelasData(updatedKelasData);
+        setIsEditModalOpen(false);
+      } else {
+        console.error('Failed to update kelas');
+      }
+    } catch (error) {
+      console.error('Error updating kelas:', error);
+    }
+  };
+  
+  
+   
+  const handleOpenAddModal = () => {
+    setListKelasData({ 
+      matakuliah: '',
+      kelas: '',
+      dosen: [],
+      kapasitas: '',
+      skala: '', });
+    setIsAddModalOpen(true);
+  };
+
   const handleCloseDeleteDialog = () => setIsDeleteDialogOpen(false);
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
@@ -98,71 +177,88 @@ const AddKelas = () => {
   };
 
   const handleAddKelas = async (e) => {
-    e.preventDefault();
-  
-    // Validasi input dosen
-    if (listKelasData.dosen.length === 0) {
-      setDosenError(true);
-      return;
-    }
-    setDosenError(false);
-  
-    const selectedDosenIds = dosenData
-      .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
-      .map(dosen => dosen.id_dosen);
-  
-    const selectedMatakuliah = matakuliahsData.find(
-      matkul => `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah
-    );
-  
-    if (!selectedMatakuliah) {
-      setMatakuliahError(true);
-      return;
-    }
-    setMatakuliahError(false);
-  
-    const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
-  
-    // Data yang akan dikirim ke backend
-    const dataToSend = {
-      matkul_id: id_matkul,
-      skala: listKelasData.skala,
-      kelas: listKelasData.kelas,
-      dosen_ids: selectedDosenIds,
-      kapasitas: listKelasData.kapasitas,
-    };
-  
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/kelasadd', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
-      });
-  
-      if (response.ok) {
-        // After adding, re-fetch all classes from the backend
-        const updatedKelasData = await fetch('http://127.0.0.1:5000/api/listkelas')
-          .then(res => res.json())
-          .catch(error => console.error('Error fetching kelas data:', error));
-        // Update state with the fetched kelas data
-        setKelasData(updatedKelasData);
-        setListKelasData({
-          matakuliah: '',
-          kelas: '',
-          dosen: [],
-          kapasitas: '',
-          skala: '',
-        });
-        setIsAddModalOpen(false);
-      } else {
-        console.error('Failed to add kelas');
-      }
-    } catch (error) {
-      console.error('Error adding kelas:', error);
-    }
+  e.preventDefault();
+
+  // Validasi input dosen
+  if (listKelasData.dosen.length === 0) {
+    setDosenError(true);
+    return;
+  }
+  setDosenError(false);
+
+  const selectedDosenIds = dosenData
+  .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
+  .sort((a, b) => listKelasData.dosen.indexOf(a.dosen) - listKelasData.dosen.indexOf(b.dosen)) // Urutkan sesuai urutan dari backend
+  .map(dosen => dosen.id_dosen);
+
+
+
+  console.log("Selected Dosen IDs:", selectedDosenIds);
+  console.log("List Kelas Data:", listKelasData);
+
+
+  const selectedMatakuliah = matakuliahsData.find(
+    matkul => `${matkul.kode} - ${matkul.matakuliah}` === listKelasData.matakuliah
+  );
+
+  if (!selectedMatakuliah) {
+    setMatakuliahError(true);
+    return;
+  }
+  setMatakuliahError(false);
+
+  const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
+
+  // Cek jika kelas sudah ada
+  const isClassExist = kelasData.some(
+    kelas => kelas.matakuliah === listKelasData.matakuliah && kelas.kelas === listKelasData.kelas
+  );
+
+  if (isClassExist) {
+    alert("Kelas ini sudah ada.");
+    return; 
+  }
+
+  const dataToSend = {
+    matkul_id: id_matkul,
+    skala: listKelasData.skala,
+    kelas: listKelasData.kelas,
+    dosen_ids: selectedDosenIds,
+    kapasitas: listKelasData.kapasitas,
   };
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/kelasadd', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSend),
+    });
+
+    if (response.ok) {
+      // After adding, re-fetch all classes from the backend
+      const updatedKelasData = await fetch('http://127.0.0.1:5000/api/listkelas')
+        .then(res => res.json())
+        .catch(error => console.error('Error fetching kelas data:', error));
+      // Update state with the fetched kelas data
+      setKelasData(updatedKelasData);
+      setListKelasData({
+        matakuliah: '',
+        kelas: '',
+        dosen: [],
+        kapasitas: '',
+        skala: '',
+      });
+      setIsAddModalOpen(false);
+    } else {
+      console.error('Failed to add kelas');
+    }
+  } catch (error) {
+    console.error('Error adding kelas:', error);
+  }
+};
+ 
   
 
   const handleDeleteMatakuliah = (id_kelas, kelas) => {
@@ -216,14 +312,19 @@ const AddKelas = () => {
           setSkalaWarning('Hanya bisa ada satu kelas "Inter" untuk mata kuliah ini.');
         }
       } else if (listKelasData.skala === 'MBKM') {
-        if (!existingClasses.includes(`${namaMatkul}. MBKM`)) {
-          newKelas = `${namaMatkul}. MBKM`;
+        const matkulData = matakuliahsData.find(item => item.matakuliah === namaMatkul);
+        if (matkulData && matkulData.wp === 'P') { // Hanya mata kuliah pilihan
+          if (!existingClasses.includes(`${namaMatkul}. MBKM`)) {
+            newKelas = `${namaMatkul}. MBKM`;
+          } else {
+            setSkalaWarning('Hanya bisa ada satu kelas "MBKM" untuk mata kuliah ini.');
+          }
         } else {
-          setSkalaWarning('Hanya bisa ada satu kelas "MBKM" untuk mata kuliah ini.');
+          setSkalaWarning('Hanya mata kuliah pilihan yang bisa dimasukkan ke skala "MBKM".');
         }
       }
   
-      // Update hanya `kelas` tanpa mengubah `matakuliah`
+      
       setListKelasData(prevData => ({
         ...prevData,
         kelas: newKelas || ''
@@ -234,10 +335,16 @@ const AddKelas = () => {
         kelas: '',
       }));
     }
-  }, [listKelasData.matakuliah, listKelasData.skala, kelasData]);
+  }, [listKelasData.matakuliah, listKelasData.skala, kelasData,matakuliahsData]);
   
 
   const columns = [
+    { 
+      accessorKey: 'no', 
+      header: 'No', 
+      Cell: ({ row }) => row.index + 1, 
+      enableSorting: false, 
+  },
     { accessorKey: 'matakuliah', header: 'Matakuliah' },
     { accessorKey: 'kelas', header: 'Kelas', enableSorting: true },
     {
@@ -246,9 +353,11 @@ const AddKelas = () => {
       Cell: ({ row }) => {
         const dosenData = row.original.dosen;
         return (
-          <div>
-            {dosenData}
-          </div>
+          <div style={{ whiteSpace: 'pre-line' }}>
+          {dosenData.split('\n').map((dosen, index) => (
+          <div key={index}>{dosen}</div>
+        ))}
+      </div>
         );
       }
     },    
@@ -258,6 +367,7 @@ const AddKelas = () => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
+          <MdEdit color='blue' size={20} onClick={() => handleEditKelas(row.original)} />
           <MdDelete color='red' size={20} onClick={() => handleDeleteMatakuliah(row.original.id_kelas, row.original.kelas)} />
         </div>
       ),
@@ -266,12 +376,11 @@ const AddKelas = () => {
   
   const table = useMaterialReactTable({
     columns,
-    data: kelasData,  // Gunakan kelasData untuk menampilkan kelas
+    data: kelasData, 
     enableRowSelection: false,
     initialState: {
-      pagination: { pageSize: 10, pageIndex: 0 },
+      pagination: { pageSize: 26, pageIndex: 2 },
       showGlobalFilter: true,
-      sorting: [{ id: 'kelas', desc: false }]
     },
     muiPaginationProps: {
       rowsPerPageOptions: [10, 15, 20, 25, 30, 35],
@@ -334,12 +443,12 @@ const AddKelas = () => {
         <DialogTitle>Delete Kelas</DialogTitle>
         <DialogContent sx={{ minWidth: 400 }}>
         {/* <Typography>Are you sure you want to delete :</Typography> */}
-        <Typography>{kelasToDelete.kelas}</Typography>
+        <Typography className='dialog-delete'>apakah anda ingin menghapus "{kelasToDelete.kelas}"?</Typography>
           <TextField fullWidth label="Enter `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} disabled={confirmationText !== 'delete'}>delete</Button>
+          <Button onClick={handleConfirmDelete}>delete</Button>
         </DialogActions>
       </Dialog>
 
@@ -350,40 +459,10 @@ const AddKelas = () => {
             </Typography>
             <form onSubmit={handleAddKelas}>
               <Grid container spacing={2}>
-                {/* pilihan jenjang */}
-                <Grid item xs={6}>
-                  <TextField select fullWidth 
-                    label="Jenjang" 
-                    value={selectedJenjang} 
-                    onChange={(e) => setSelectedJenjang(e.target.value)} 
-                    required
-                  >
-                    <MenuItem value="All">All</MenuItem>
-                    <MenuItem value="S1">S1</MenuItem>
-                    <MenuItem value="S2">S2</MenuItem>
-                  </TextField>
-                </Grid>
-                {/* pilihan semester */}
-                <Grid item xs={6}>
-                  <TextField select fullWidth 
-                    label="Semester" 
-                    value={selectedSemester} 
-                    onChange={(e) => setSelectedSemester(e.target.value)} 
-                    required>
-                    <MenuItem value="All">All</MenuItem> {/* Opsi All */}
-                    <MenuItem value="Ganjil">Ganjil</MenuItem>
-                    <MenuItem value="Genap">Genap</MenuItem>
-                  </TextField>
-                </Grid>
                 {/* input matakuliah */}
                 <Grid item xs={12}>
                 <Autocomplete
-                  options={matakuliahsData
-                    .filter(matkul => 
-                      (selectedJenjang === 'All' || matkul.jenjang === selectedJenjang) && 
-                      (selectedSemester === 'All' || matkul.semester === selectedSemester || matkul.semester === 'All')
-                    )
-                    .map((matkul) => ({
+                  options={matakuliahsData.map((matkul) => ({
                       label: `${matkul.kode} - ${matkul.matakuliah}`,
                       value: `${matkul.kode} - ${matkul.matakuliah}`,
                     }))}
@@ -418,7 +497,6 @@ const AddKelas = () => {
                     name="skala" 
                     value={listKelasData.skala} 
                     onChange={handleChange} 
-                    inputRef={skalaRef} 
                     error={!!skalaWarning} 
                     helperText={skalaWarning} 
                   required>
@@ -434,7 +512,6 @@ const AddKelas = () => {
                     name="kelas" 
                     value={listKelasData.kelas} 
                     onChange={handleChange} 
-                    inputRef={kelasRef} 
                     disabled={!!skalaWarning}
                     required 
                   />
@@ -456,7 +533,7 @@ const AddKelas = () => {
                     )}
                     value={listKelasData.dosen}
                     onChange={(event, newValue) => {
-                      if (newValue.length <= 3) { // Memastikan maksimal 3 dosen yang dipilih
+                      if (newValue.length <= 3) { 
                         setListKelasData({ ...listKelasData, dosen: newValue });
                         setDosenError(false);
                       } else {
@@ -471,10 +548,129 @@ const AddKelas = () => {
                 </Grid>
                 {/* input kapasitas */}
                 <Grid item xs={12}>
-                  <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} inputRef={kapasitasRef} required />
+                  <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} required />
                 </Grid>
               </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" disabled={!!skalaWarning} sx={{ mt: 2 }}>Tambah</Button>
+          </form>
+        </Box>
+      </Modal>
+
+      <Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            width: 500,
+          }}
+        >
+          <Typography variant="h6">
+            Edit Kelas
+            <IconButton
+              onClick={() => setIsEditModalOpen(false)}
+              style={{ float: 'right' }}
+            >
+              <CloseIcon color="primary" />
+            </IconButton>
+          </Typography>
+          <form onSubmit={handleUpdateKelas}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Matakuliah"
+                  name="matakuliah"
+                  value={kelasToEdit.matakuliah || ''}
+                  onChange={(e) =>
+                    setKelasToEdit({ ...kelasToEdit, matakuliah: e.target.value })
+                  }
+                  disabled
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Skala"
+                  name="skala"
+                  value={kelasToEdit.skala || ''}
+                  onChange={(e) =>
+                    setKelasToEdit({ ...kelasToEdit, skala: e.target.value })
+                  }
+                  required
+                >
+                  <MenuItem value="Nasional">Nasional</MenuItem>
+                  <MenuItem value="Inter">Internasional</MenuItem>
+                  <MenuItem value="MBKM">MBKM</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Kelas"
+                  name="kelas"
+                  value={kelasToEdit.kelas || ''}
+                  onChange={(e) =>
+                    setKelasToEdit({ ...kelasToEdit, kelas: e.target.value })
+                  }
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Autocomplete
+                  multiple
+                  options={dosenData.map((dosen) => dosen.dosen)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Dosen"
+                      name="dosen"
+                      error={dosenErrors}
+                      helperText={
+                        dosenErrors ? 'Silakan pilih maksimal 3 dosen.' : ''
+                      }
+                    />
+                  )}
+                  value={kelasToEdit.dosen || []}
+                  onChange={(event, newValue) => {
+                    if (newValue.length <= 3) {
+                      setKelasToEdit({ ...kelasToEdit, dosen: newValue });
+                      setDosenErrors(false);
+                    } else {
+                      setDosenErrors(true);
+                    }
+                  }}
+                  disableCloseOnSelect
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Kapasitas"
+                  name="kapasitas"
+                  value={kelasToEdit.kapasitas || ''}
+                  onChange={(e) =>
+                    setKelasToEdit({ ...kelasToEdit, kapasitas: e.target.value })
+                  }
+                  required
+                />
+              </Grid>
+            </Grid>
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+            >
+              Update
+            </Button>
           </form>
         </Box>
       </Modal>

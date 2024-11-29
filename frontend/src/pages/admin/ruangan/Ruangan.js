@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
-import { MdDelete } from "react-icons/md";
-import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { MdDelete, MdEdit } from "react-icons/md";
+import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import {  
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
   MRT_TableBodyCellValue as MRT_TABLE_BODY_CELL_VALUE, 
@@ -15,31 +15,58 @@ import { IconButton } from '@mui/material';
 
 const Ruangan = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [ruanganToDelete, setRuanganToDelete] = useState({ id_ruangan: '', name: '' });
   const [confirmationText, setConfirmationText] = useState('');
   const [ruanganData, setRuanganData] = useState({
     name: '',
     kapasitas: '',
+    jenis: '',
   });
 
   const [ruangans, setRuangans] = useState([]);
 
-  const handleOpenAddModal = () => {
-    setIsAddModalOpen(true);
-  };
-
-  const handleCloseAddModal = () => {
-    setIsAddModalOpen(false);
-  };
-
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
   };
+  const handleOpenAddModal = () => {
+    setRuanganData({ name: '', kapasitas: '', jenis:'' });
+    setIsAddModalOpen(true);
+  };
+  
+  const handleCloseAddModal = () => setIsAddModalOpen(false);
+
+  const handleOpenEditModal = (ruangan) => {
+    setRuanganData(ruangan);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => setIsEditModalOpen(false);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setRuanganData({ ...ruanganData, [name]: value });
+  };
+
+  const handleEditRuangan = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/ruanganedit/${ruanganData.id_ruangan}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ruanganData),
+      });
+      if (response.ok) {
+        await fetchRuangan();
+        setIsEditModalOpen(false);
+      } else {
+        console.error('Failed to edit dosen');
+      }
+    } catch (error) {
+      console.error("Error editing dosen: ", error);
+    }
   };
 
   const fetchRuangan = async () => {
@@ -71,7 +98,7 @@ const handleAddRuangan = async (e) => {
 
     if (response.ok) {
       await fetchRuangan();
-      setRuanganData({ name: '', kapasitas: ''});
+      setRuanganData({ name: '', kapasitas: '',jenis:''});
       setIsAddModalOpen(false);
     } else {
       console.error('Failed to add matakuliah');
@@ -117,6 +144,7 @@ const handleAddRuangan = async (e) => {
       header: "Action",
       Cell: ({ row }) => (
         <div>
+          <MdEdit color='blue' size={20} onClick={() => handleOpenEditModal(row.original)} />
           <MdDelete color='red' size={20} onClick={() => handleDeleteRuangan(row.original.id_ruangan, row.original.name)} />
         </div>
       ),
@@ -189,7 +217,7 @@ const handleAddRuangan = async (e) => {
         <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
           <DialogTitle>Delete Ruangan</DialogTitle>
           <DialogContent sx={{ minWidth: 400 }}>
-            <Typography>{ruanganToDelete.name}</Typography>
+            <Typography className='dialog-delete'>apakah anda ingin menghapus "{ruanganToDelete.name}"?</Typography>
             <TextField fullWidth label="Entar `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
           </DialogContent>
           <DialogActions>
@@ -211,8 +239,41 @@ const handleAddRuangan = async (e) => {
                 <Grid item xs={12}>
                   <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} required />
                 </Grid>
+                <Grid item xs={12}>
+                <TextField select fullWidth label="Jenis" name="jenis" value={ruanganData.jenis} onChange={handleChange} required>
+                  <MenuItem value="normal">normal</MenuItem>
+                  <MenuItem value="inter">inter</MenuItem>
+                  <MenuItem value="spesial">spesial</MenuItem>
+                </TextField>
+                </Grid>
               </Grid>
               <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>
+            </form>
+          </Box>
+        </Modal>
+
+        <Modal open={isEditModalOpen} onClose={handleCloseEditModal}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', boxShadow: 24, p: 4, width: 500 }}>
+            <Typography variant="h6">Edit Ruangan
+              <IconButton onClick={handleCloseEditModal} style={{ float: 'right' }}><CloseIcon color='primary' /></IconButton>
+            </Typography>
+            <form onSubmit={handleEditRuangan}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField fullWidth label="Nama Ruangan" name="name" value={ruanganData.name} onChange={handleChange} required />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} required />
+                  </Grid>
+                  <Grid item xs={12}>
+                  <TextField select fullWidth label="Jenis" name="jenis" value={ruanganData.jenis} onChange={handleChange} required>
+                    <MenuItem value="normal">normal</MenuItem>
+                    <MenuItem value="inter">inter</MenuItem>
+                    <MenuItem value="spesial">spesial</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12}><Button fullWidth type="submit" variant="contained" color="primary">Edit Ruangan</Button></Grid>
+              </Grid>
             </form>
           </Box>
         </Modal>
