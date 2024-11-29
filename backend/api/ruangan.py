@@ -7,7 +7,7 @@ ruangan_bp = Blueprint('ruangan', __name__)
 @ruangan_bp.route('/listruangan', methods=['GET'])
 def get_ruangan():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id_ruangan, name, kapasitas, createdAt FROM ruangan_db")
+    cur.execute("SELECT id_ruangan, name, kapasitas, jenis, createdAt FROM ruangan_db")
     rows = cur.fetchall()
     cur.close()
     data = [
@@ -15,7 +15,8 @@ def get_ruangan():
             'id_ruangan': row[0],
             'name': row[1],
             'kapasitas': row[2],
-            'createdAt': row[3],
+            'jenis': row[3],
+            'createdAt': row[4],
         }
         for row in rows
     ]
@@ -27,11 +28,12 @@ def add_ruangan():
     data = request.get_json()
     name = data['name']
     kapasitas = data['kapasitas']
+    jenis = data['jenis']
     createdAt = datetime.now()
 
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO ruangan_db (name, kapasitas, createdAt) VALUES (%s, %s, %s)",
-                (name, kapasitas, createdAt))
+    cur.execute("INSERT INTO ruangan_db (name, kapasitas, jenis, createdAt) VALUES (%s, %s, %s, %s)",
+                (name, kapasitas, jenis, createdAt))
     mysql.connection.commit()
     cur.close()
 
@@ -45,4 +47,26 @@ def delete_ruangan(id_ruangan):
     cur.close()
 
     return jsonify({'message': 'Matakuliah deleted successfully!'}), 200
+
+@ruangan_bp.route('/ruanganedit/<int:id_ruangan>', methods=['PUT'])
+def edit_ruangan(id_ruangan):
+    data = request.get_json()
+    name = data.get('name')
+    kapasitas = data.get('kapasitas')
+    jenis = data.get('jenis')
+
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE ruangan_db 
+            SET name = %s, kapasitas = %s, jenis = %s
+            WHERE id_ruangan = %s
+        """, (name, kapasitas, jenis, id_ruangan))
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'message': 'ruangan updated successfully!'}), 200
+    except Exception as e:
+        print(f"Error updating dosen: {e}")
+        return jsonify({'error': 'Failed to update dosen'}), 500
 

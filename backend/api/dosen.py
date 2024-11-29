@@ -48,3 +48,50 @@ def delete_dosen(id_dosen):
 
     return jsonify({'message': 'Matakuliah deleted successfully!'}), 200
 
+@dosen_bp.route('/checkDosenUsage/<int:id_dosen>', methods=['GET'])
+def check_dosen_usage(id_dosen):
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Cek referensi di tabel kelas_db
+        cur.execute("SELECT COUNT(*) FROM dosen_db WHERE id_dosen = %s", (id_dosen,))
+        kelas_count = cur.fetchone()[0]
+        
+        # Cek referensi di tabel kelas_dosen
+        cur.execute("SELECT COUNT(*) FROM kelas_dosen WHERE dosen_id = %s", (id_dosen,))
+        jadwal_count = cur.fetchone()[0]
+        
+        cur.close()
+        
+        # Buat respon yang menunjukkan status penggunaan di masing-masing tabel
+        usage_status = {
+            "is_used_in_kelas": kelas_count > 0,
+            "is_used_in_jadwal": jadwal_count > 0
+        }
+        
+        return jsonify(usage_status), 200
+    except Exception as e:
+        print(f"Error checking dosen usage: {e}")
+        return jsonify({'error': 'Failed to check dosen usage'}),
+    
+@dosen_bp.route('/dosenedit/<int:id_dosen>', methods=['PUT'])
+def edit_dosen(id_dosen):
+    data = request.get_json()
+    nip = data.get('nip')
+    dosen = data.get('dosen')
+    bidang = data.get('bidang')
+
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE dosen_db 
+            SET nip = %s, dosen = %s, bidang = %s
+            WHERE id_dosen = %s
+        """, (nip, dosen, bidang, id_dosen))
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'message': 'Dosen updated successfully!'}), 200
+    except Exception as e:
+        print(f"Error updating dosen: {e}")
+        return jsonify({'error': 'Failed to update dosen'}), 500

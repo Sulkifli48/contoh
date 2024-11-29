@@ -8,6 +8,9 @@ import Matakuliah from './pages/admin/matakuliah/Matakuliah';
 import Ruangan from './pages/admin/ruangan/Ruangan';
 import Jadwal from './pages/admin/jadwal/Jadwal';
 import Kelas from './pages/admin/kelas/Kelas';
+import Login from './pages/login/Login';
+
+
 
 const App = () => {
   return (
@@ -16,6 +19,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
 
             <Route path="/admin/dashboard" element={<DashAdmin />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/admin/add-admin" element={<AddAdmin />} />
 
             <Route path="/admin/dosen" element={<Dosen />} />

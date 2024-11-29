@@ -1,11 +1,13 @@
 @import url('https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css');
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
 }
+
 .sidebar {
     position: fixed;
     left: 0;
@@ -16,47 +18,46 @@
     padding: 6px 14px;
     z-index: 99;
     transition: all 0.5s ease;
-    -webkit-transition: all 0.5s ease;
-    -moz-transition: all 0.5s ease;
-    -ms-transition: all 0.5s ease;
-    -o-transition: all 0.5s ease;
 }
+
 .sidebar.open {
     width: 250px;
 }
+
 .sidebar .logo-details {
     height: 60px;
     display: flex;
     align-items: center;
     position: relative;
 }
-.sidebar .logo-details .icon {
+
+.sidebar .logo-details .icon,
+.sidebar .logo-details .logo_name {
     opacity: 0;
     transition: all 0.5s ease;
 }
+
 .sidebar .logo-details .logo_name {
     color: #3F72AF;
     font-size: 20px;
     font-weight: 600;
-    opacity: 0;
-    transition: all 0.5s ease;
 }
+
 .sidebar.open .logo-details .icon,
 .sidebar.open .logo-details .logo_name {
     opacity: 1;
 }
+
 .sidebar .logo-details #btn {
     position: absolute;
     top: 50%;
     right: 0;
     transform: translateY(-50%);
-    font-size: 22px;
-    transition: all 0.4s ease;
     font-size: 23px;
-    text-align: center;
     cursor: pointer;
     transition: all 0.5s ease;
 }
+
 .sidebar.open .logo-details #btn {
     text-align: right;
 }
@@ -69,22 +70,25 @@
     text-align: center;
     line-height: 60px;
 }
+
 .sidebar .nav-list {
     margin-top: 20px;
     height: 100%;
 }
+
 .sidebar li {
     position: relative;
     margin: 8px 0;
     list-style: none;
 }
+
 .sidebar li .tooltip {
     position: absolute;
     top: -20px;
     left: calc(100% + 15px);
     z-index: 3;
     background: #3F72AF;
-    color:whitesmoke;
+    color: whitesmoke;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
     padding: 6px 12px;
     border-radius: 4px;
@@ -95,6 +99,7 @@
     pointer-events: none;
     transition: 0s;
 }
+
 .sidebar li:hover .tooltip {
     opacity: 1;
     pointer-events: auto;
@@ -102,26 +107,29 @@
     top: 50%;
     transform: translateY(-50%);
 }
+
 .sidebar.open li .tooltip {
     display: none;
 }
+
 .sidebar input {
     font-size: 15px;
     color: #3F72AF;
     font-weight: 400;
     outline: none;
     height: 50px;
-    width: 100%;
     width: 50px;
     border: none;
     border-radius: 12px;
     transition: all 0.5s ease;
     background: #DBE2EF;
 }
+
 .sidebar.open input {
     padding: 0 20px 0 50px;
     width: 100%;
 }
+
 .sidebar .bx-search {
     position: absolute;
     top: 50%;
@@ -131,14 +139,17 @@
     background: #DBE2EF;
     color: #3F72AF;
 }
+
 .sidebar.open .bx-search:hover {
     background: #DBE2EF;
     color: #3F72AF;
 }
+
 .sidebar .bx-search:hover {
     background: #3F72AF;
     color: #DBE2EF;
 }
+
 .sidebar li a {
     display: flex;
     height: 100%;
@@ -147,11 +158,12 @@
     align-items: center;
     text-decoration: none;
     transition: all 0.4s ease;
-    background: #DBE2EF;
 }
+
 .sidebar li a:hover {
     background: #3F72AF;
 }
+
 .sidebar li a .links_name {
     color: #3F72AF;
     font-size: 15px;
@@ -161,21 +173,25 @@
     pointer-events: none;
     transition: 0.4s;
 }
+
 .sidebar.open li a .links_name {
     opacity: 1;
     pointer-events: auto;
 }
+
 .sidebar li a:hover .links_name,
 .sidebar li a:hover i {
     transition: all 0.5s ease;
     color: #DBE2EF;
 }
+
 .sidebar li i {
     height: 50px;
     line-height: 50px;
     font-size: 18px;
     border-radius: 12px;
 }
+
 .sidebar li.profile {
     position: fixed;
     height: 60px;
@@ -183,18 +199,14 @@
     left: 0;
     bottom: -8px;
     padding: 10px 14px;
-    background: #DBE2EF;
     transition: all 0.5s ease;
     overflow: hidden;
 }
+
 .sidebar.open li.profile {
     width: 250px;
 }
-.sidebar li .profile-details {
-    display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-}
+
 .sidebar li img {
     height: 45px;
     width: 45px;
@@ -202,6 +214,7 @@
     border-radius: 6px;
     margin-right: 10px;
 }
+
 .sidebar li.profile .name,
 .sidebar li.profile .job {
     font-size: 15px;
@@ -209,9 +222,11 @@
     color: #3F72AF;
     white-space: nowrap;
 }
+
 .sidebar li.profile .job {
     font-size: 12px;
 }
+
 .sidebar .profile #log_out {
     position: absolute;
     top: 50%;
@@ -221,29 +236,16 @@
     width: 100%;
     height: 60px;
     line-height: 60px;
-    border-radius: 0px;
     transition: all 0.5s ease;
 }
+
 .sidebar.open .profile #log_out {
     width: 50px;
     background: none;
 }
 
-/* .{
-    position: relative;
-    background: white;
-    min-height: 100vh;
-    top: 0;
-    left: 78px;
-    width: calc(100% - 78px);
-    transition: all 0.5s ease;
-    z-index: 2;
-    padding: 30px;
-} */
-
 .sidebar.open ~ .dashboard {
     margin-left: 170px;
-    /* width: calc(100% - 170px); */
     transition: margin-left 0.5s ease;
 }
 
@@ -255,8 +257,19 @@
     transition: width 0.5s ease;
 }
 
+.nav-list li.active {
+    background: #3F72AF;
+    border-radius: 12px;
+}
+
+.nav-list li.active i,
+.nav-list li.active .links_name {
+    color: #FFFFFF;
+}
+
+
 @media (max-width: 420px) {
     .sidebar li .tooltip {
-    display: none;
+        display: none;
     }
 }

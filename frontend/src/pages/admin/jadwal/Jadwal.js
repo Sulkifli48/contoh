@@ -162,7 +162,7 @@ const Jadwal = () => {
         <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
           <DialogTitle>Delete Jadwal</DialogTitle>
           <DialogContent>
-            <Typography>To confirm deletion, please enter: "delete-{jadwalToDelete.nama}"</Typography>
+            <Typography className='dialog-delete'>apakah anda ingin menghapus "{jadwalToDelete.nama}"?</Typography>
             <TextField fullWidth label="Confirmation Text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
           </DialogContent>
           <DialogActions>

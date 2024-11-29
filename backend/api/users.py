@@ -26,11 +26,12 @@ def add_users():
     data = request.get_json()
     name = data['name']
     email = data['email']
+    password = data['password']
     createdAt = datetime.now()
 
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO users_db (name, email, createdAt) VALUES (%s, %s, %s)",
-                (name, email, createdAt))
+    cur.execute("INSERT INTO users_db (name, email, password, createdAt) VALUES (%s, %s, %s, %s)",
+                (name, email, password, createdAt))
     mysql.connection.commit()
     cur.close()
 
@@ -44,3 +45,25 @@ def delete_users(id_users):
     cur.close()
 
     return jsonify({'message': 'Matakuliah deleted successfully!'}), 200
+
+@users_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')  
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id_users, name, email FROM users_db WHERE email = %s AND password = %s", (email, password))
+    user = cur.fetchone()
+    cur.close()
+
+    if user:
+        response = {
+            'id_users': user[0],
+            'name': user[1],
+            'email': user[2],
+            'user_role': 'Admin'  # Sesuaikan dengan kolom role jika tersedia
+        }
+        return jsonify(response), 200
+    else:
+        return jsonify({'error': 'Invalid email or password'}), 401

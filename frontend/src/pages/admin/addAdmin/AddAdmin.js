@@ -191,7 +191,7 @@ const columns = [
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Admin</DialogTitle>
         <DialogContent sx={{ minWidth: 400 }}>
-          <Typography>{adminToDelete.name}</Typography>
+          <Typography className='dialog-delete'>apakah anda ingin menghapus "{adminToDelete.name}"?</Typography>
           <TextField fullWidth label="Enter `delete` to Confirm" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} />
         </DialogContent>
         <DialogActions>
