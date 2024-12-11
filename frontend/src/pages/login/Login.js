@@ -1,12 +1,14 @@
 import './Login.css';
 import { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'; // Import ikon
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null); 
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -59,14 +61,20 @@ const Login = () => {
                             required
                         />
                     </div>
-                    <div className='input-box'>
+                    <div className='input-box password-container'>
                         <input
-                            type='password'
+                            type={showPassword ? 'text' : 'password'}
                             placeholder='Password'
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                        <span
+                            onClick={() => setShowPassword(!showPassword)}
+                            className='toggle-password'
+                        >
+                            {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+                        </span>
                     </div>
                     <div className='lupapass'>
                         <Link to="/forget">Forgot password</Link>

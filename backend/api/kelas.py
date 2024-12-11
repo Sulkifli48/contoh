@@ -13,7 +13,7 @@ def get_kelas():
             matakuliah_db.matakuliah,
             kelas_db.skala,
             kelas_db.kelas,
-            GROUP_CONCAT(dosen_db.dosen ORDER BY kelas_dosen.urutan_dosen SEPARATOR '\n'),
+            GROUP_CONCAT(dosen_db.id_dosen ORDER BY kelas_dosen.urutan_dosen SEPARATOR ', '),
             kelas_db.kapasitas,
             kelas_db.createdAt
         FROM 
@@ -35,7 +35,7 @@ def get_kelas():
             'matakuliah': row[1],
             'skala': row[2],
             'kelas': row[3],
-            'dosen': row[4],
+            'dosen': [int(x) for x in row[4].split(', ')] if row[4] else [],
             'kapasitas': row[5],
             'createdAt': row[6],
         }
@@ -118,10 +118,6 @@ def edit_kelas(id_kelas):
         kelas = data.get('kelas')
         kapasitas = data.get('kapasitas')
         dosen_ids = data.get('dosen_ids', []) 
-
-        # Validasi nilai 'skala'
-        if skala not in ["Inter", "Nasional", "MBKM"]:
-            return jsonify({"error": "Nilai skala harus 'Inter', 'Nasional', atau 'MBKM'"}), 400
 
         cur = mysql.connection.cursor()
 

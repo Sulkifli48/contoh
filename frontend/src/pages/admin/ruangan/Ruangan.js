@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete, MdEdit } from "react-icons/md";
-import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete } from '@mui/material';
 import {  
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
   MRT_TableBodyCellValue as MRT_TABLE_BODY_CELL_VALUE, 
@@ -22,25 +22,53 @@ const Ruangan = () => {
   const [ruanganData, setRuanganData] = useState({
     name: '',
     kapasitas: '',
-    jenis: '',
+    jenis: [],
+  });
+  const [ruanganEditData, setRuanganEditData] = useState({
+    name: '',
+    kapasitas: '',
+    jenis: [],
   });
 
+
   const [ruangans, setRuangans] = useState([]);
+  const [jenisData, setJenisData] = useState([]);
+  const [jenisError, setJenisError] = useState(false);
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
   };
   const handleOpenAddModal = () => {
-    setRuanganData({ name: '', kapasitas: '', jenis:'' });
+    setRuanganData({ name: '', kapasitas: '', jenis:[] });
     setIsAddModalOpen(true);
   };
   
   const handleCloseAddModal = () => setIsAddModalOpen(false);
 
   const handleOpenEditModal = (ruangan) => {
-    setRuanganData(ruangan);
+    console.log("Jenis sebelum format:", ruangan.jenis);
+    
+    const jenisFormatted = typeof ruangan.jenis === 'string' 
+      ? ruangan.jenis.split(',').map((item) => item.trim()) 
+      : ruangan.jenis.map((item) => item.trim());
+  
+    const idKelasFormatted = jenisFormatted.map((jenis) => {
+      const matchedJenis = jenisData.find((data) => data.jenis === jenis);
+      return matchedJenis ? matchedJenis.id_jenis : null; 
+    }).filter((id) => id !== null); 
+  
+    console.log("ID Kelas setelah format:", idKelasFormatted);
+  
+    setRuanganEditData({
+      id_ruangan: ruangan.id_ruangan,
+      name: ruangan.name,
+      kapasitas: ruangan.kapasitas,
+      jenis: idKelasFormatted,
+    });
     setIsEditModalOpen(true);
   };
+  
+  
 
   const handleCloseEditModal = () => setIsEditModalOpen(false);
 
@@ -52,11 +80,25 @@ const Ruangan = () => {
 
   const handleEditRuangan = async (e) => {
     e.preventDefault();
+    if (ruanganEditData.jenis.length === 0) {
+      setJenisError(true);
+      return;
+    }
+    setJenisError(false); 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/ruanganedit/${ruanganData.id_ruangan}`, {
+
+      const payload = {
+        id_ruangan: ruanganEditData.id_ruangan,
+        name: ruanganEditData.name,
+        kapasitas: ruanganEditData.kapasitas,
+        jenis_ids: ruanganEditData.jenis,
+    };
+    console.log("ID Kelas setelah format:", payload);
+  
+      const response = await fetch(`http://127.0.0.1:5000/api/ruanganedit/${ruanganEditData.id_ruangan}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ruanganData),
+        body: JSON.stringify(payload),
       });
       if (response.ok) {
         await fetchRuangan();
@@ -83,28 +125,53 @@ const Ruangan = () => {
     }
   };
 
-useEffect(() => {
-  fetchRuangan();
-}, []);
+  useEffect(() => {
+    fetchRuangan();
+  }, []);
 
-const handleAddRuangan = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await fetch('http://127.0.0.1:5000/api/ruanganadd', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ruanganData),
-    });
-
-    if (response.ok) {
-      await fetchRuangan();
-      setRuanganData({ name: '', kapasitas: '',jenis:''});
-      setIsAddModalOpen(false);
-    } else {
-      console.error('Failed to add matakuliah');
+  const fetchData = async (endpoint, setState) => {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      setState(data);
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
     }
+  };
+  
+  useEffect(() => {
+    fetchData('http://127.0.0.1:5000/api/listjenis', setJenisData);
+  }, []);
+
+const handleAddRuangan = async (e) => { 
+  e.preventDefault();
+  if (ruanganData.jenis.length === 0) {
+    setJenisError(true);
+    return;
+  }
+  setJenisError(false);
+  try {
+      const payload = {
+          name: ruanganData.name,
+          kapasitas: ruanganData.kapasitas,
+          jenis_ids: ruanganData.jenis, 
+      };
+
+      const response = await fetch('http://127.0.0.1:5000/api/ruanganadd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+          await fetchRuangan();
+          setRuanganData({ name: '', kapasitas: '', jenis: [] });
+          setIsAddModalOpen(false);
+      } else {
+          console.error('Failed to add ruangan');
+      }
   } catch (error) {
-    console.error("Error adding matakuliah: ", error);
+      console.error('Error adding ruangan: ', error);
   }
 };
   
@@ -240,12 +307,38 @@ const handleAddRuangan = async (e) => {
                   <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={12}>
-                <TextField select fullWidth label="Jenis" name="jenis" value={ruanganData.jenis} onChange={handleChange} required>
-                  <MenuItem value="normal">normal</MenuItem>
-                  <MenuItem value="inter">inter</MenuItem>
-                  <MenuItem value="spesial">spesial</MenuItem>
-                </TextField>
+                <Autocomplete
+                      multiple
+                      options={jenisData}
+                      getOptionLabel={(option) => option.jenis} 
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Jenis"
+                          error={jenisError}
+                          helperText={jenisError ? "Silakan pilih maksimal 3 jenis" : ""}
+                        />
+                      )}
+                      value={jenisData.filter((jenis) => ruanganData.jenis.includes(jenis.id_jenis))}
+                      onChange={(event, newValue) => {
+                        if (newValue.length <= 3) {
+                          setRuanganData({
+                            ...ruanganData,
+                            jenis: newValue.map((jenis) => jenis.id_jenis),
+                          });
+                          setJenisError(false);
+                        } else {
+                          setJenisError(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        setJenisError(ruanganData.jenis.length === 0 || ruanganData.jenis.length > 3);
+                      }}
+                      disableCloseOnSelect
+                    />
+
                 </Grid>
+                
               </Grid>
               <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>
             </form>
@@ -253,30 +346,70 @@ const handleAddRuangan = async (e) => {
         </Modal>
 
         <Modal open={isEditModalOpen} onClose={handleCloseEditModal}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', boxShadow: 24, p: 4, width: 500 }}>
+          <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', boxShadow: 24, p: 4, width: 500 }}>
             <Typography variant="h6">Edit Ruangan
               <IconButton onClick={handleCloseEditModal} style={{ float: 'right' }}><CloseIcon color='primary' /></IconButton>
             </Typography>
             <form onSubmit={handleEditRuangan}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField fullWidth label="Nama Ruangan" name="name" value={ruanganData.name} onChange={handleChange} required />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField fullWidth label="Kapasitas" name="kapasitas" type="number" value={ruanganData.kapasitas} onChange={handleChange} required />
-                  </Grid>
-                  <Grid item xs={12}>
-                  <TextField select fullWidth label="Jenis" name="jenis" value={ruanganData.jenis} onChange={handleChange} required>
-                    <MenuItem value="normal">normal</MenuItem>
-                    <MenuItem value="inter">inter</MenuItem>
-                    <MenuItem value="spesial">spesial</MenuItem>
-                  </TextField>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField 
+                    fullWidth 
+                    label="Nama Ruangan" 
+                    name="name" 
+                    value={ruanganEditData.name} 
+                    onChange={(e) => setRuanganEditData({ ...ruanganEditData, name: e.target.value })} 
+                    required 
+                  />
                 </Grid>
-                <Grid item xs={12}><Button fullWidth type="submit" variant="contained" color="primary">Edit Ruangan</Button></Grid>
+                <Grid item xs={12}>
+                  <TextField 
+                    fullWidth 
+                    label="Kapasitas" 
+                    name="kapasitas" 
+                    type="number" 
+                    value={ruanganEditData.kapasitas} 
+                    onChange={(e) => setRuanganEditData({ ...ruanganEditData, kapasitas: e.target.value })} 
+                    required 
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={jenisData}
+                    getOptionLabel={(option) => option.jenis} 
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Jenis"
+                        error={jenisError}
+                        helperText={jenisError ? "Silakan pilih maksimal 3 jenis" : ""}
+                      />
+                    )}
+                    value={jenisData.filter((jenis) => ruanganEditData.jenis.includes(jenis.id_jenis))}
+                    onChange={(event, newValue) => {
+                      if (newValue.length <= 3) {
+                        setRuanganEditData({
+                          ...ruanganEditData,
+                          jenis: newValue.map((jenis) => jenis.id_jenis),
+                        });
+                        setJenisError(false);
+                      } else {
+                        setJenisError(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      setJenisError(ruanganEditData.jenis.length === 0 || ruanganEditData.jenis.length > 3);
+                    }}
+                    disableCloseOnSelect
+                  />
+                </Grid>
               </Grid>
+              <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Save Changes</Button>
             </form>
           </Box>
         </Modal>
+
       </div>
     </div>
   );

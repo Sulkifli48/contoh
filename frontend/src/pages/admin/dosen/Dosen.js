@@ -3,7 +3,7 @@ import Sidebar from '../../../components/sidebar/Sidebar';
 import { MdDelete, MdEdit } from "react-icons/md";
 import { 
   Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, 
-  Modal, TextField, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton 
+  Modal, TextField, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, IconButton 
 } from '@mui/material';
 import { 
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD, 
@@ -22,7 +22,7 @@ const Dosen = () => {
   const [dosenToDelete, setDosenToDelete] = useState({ id_dosen: '', dosen: '' });
   const [confirmationText, setConfirmationText] = useState('');
   const [isDosenUsed, setIsDosenUsed] = useState(false);
-  const [dosenData, setDosenData] = useState({ nip: '', dosen: '', bidang: '' });
+  const [dosenData, setDosenData] = useState({ nip: '', dosen: '', room: '' });
   const [dosens, setDosens] = useState([]);
 
   const fetchDosens = async () => {
@@ -50,7 +50,7 @@ const Dosen = () => {
       });
       if (response.ok) {
         await fetchDosens();
-        setDosenData({ nip: '', dosen: '', bidang: '' });
+        setDosenData({ nip: '', dosen: '', room: '' });
         setIsAddModalOpen(false);
       } else {
         console.error('Failed to add matakuliah');
@@ -61,7 +61,7 @@ const Dosen = () => {
   };
 
   const handleOpenAddModal = () => {
-    setDosenData({ nip: '', dosen: '', bidang: '' });
+    setDosenData({ nip: '', dosen: '', room: '' });
     setIsAddModalOpen(true);
   };
   
@@ -140,7 +140,7 @@ const Dosen = () => {
   const columns = [
     { accessorKey: 'nip', header: 'Nip' },
     { accessorKey: 'dosen', header: 'Nama' },
-    { accessorKey: 'bidang', header: 'Bidang' }, 
+    { accessorKey: 'room', header: 'room' }, 
     {
       accessorKey: "action",
       header: "Action",
@@ -267,7 +267,13 @@ const Dosen = () => {
                 <Grid item xs={12}><Typography variant="h6" gutterBottom>Tambah dosen</Typography></Grid>
                 <Grid item xs={12}><TextField label="Nip" name="nip" value={dosenData.nip} onChange={handleChange} required fullWidth /></Grid>
                 <Grid item xs={12}><TextField label="Nama dosen" name="dosen" value={dosenData.dosen} onChange={handleChange} required fullWidth /></Grid>
-                <Grid item xs={12}><TextField label="Bidang" name="bidang" value={dosenData.bidang} onChange={handleChange} fullWidth /></Grid>
+                <Grid item xs={12}>
+                  <TextField select fullWidth label="Room" name="room" value={dosenData.room} required>
+                    <MenuItem value="normal">normal</MenuItem>
+                    <MenuItem value="inter">inter</MenuItem>
+                    <MenuItem value="ubicon">ubicon</MenuItem>
+                </TextField>
+                </Grid>
                 <Grid item xs={12}><Button fullWidth type="submit" variant="contained" color="primary">Tambah dosen</Button></Grid>
               </Grid>
             </form>
@@ -284,7 +290,13 @@ const Dosen = () => {
                 <Grid item xs={12}><Typography variant="h6" gutterBottom>Edit dosen</Typography></Grid>
                 <Grid item xs={12}><TextField label="Nip" name="nip" value={dosenData.nip} onChange={handleChange} required fullWidth /></Grid>
                 <Grid item xs={12}><TextField label="Nama dosen" name="dosen" value={dosenData.dosen} onChange={handleChange} required fullWidth /></Grid>
-                <Grid item xs={12}><TextField label="Bidang" name="bidang" value={dosenData.bidang} onChange={handleChange} fullWidth /></Grid>
+                <Grid item xs={12}>
+                <TextField select fullWidth label="Room" name="room" value={dosenData.room} required>
+                    <MenuItem value="normal">normal</MenuItem>
+                    <MenuItem value="inter">inter</MenuItem>
+                    <MenuItem value="ubicon">ubicon</MenuItem>
+                </TextField>
+                </Grid>
                 <Grid item xs={12}><Button fullWidth type="submit" variant="contained" color="primary">Edit dosen</Button></Grid>
               </Grid>
             </form>
