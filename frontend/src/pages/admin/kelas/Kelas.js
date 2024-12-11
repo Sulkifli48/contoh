@@ -87,16 +87,27 @@ const AddKelas = () => {
   }, []);
 
   const handleEditKelas = (kelas) => {
+    const dosenWithOrder = dosenData
+      .filter(dosen => kelas.dosen.includes(dosen.id_dosen))
+      .sort((a, b) => {
+        const indexA = kelas.dosen.indexOf(a.id_dosen);
+        const indexB = kelas.dosen.indexOf(b.id_dosen);
+        return indexA - indexB;
+      })
+      .map(dosen => dosen.dosen);
+  
     setKelasToEdit({
       id_kelas: kelas.id_kelas,
-      matakuliah: `${kelas.matakuliah}`, 
+      matakuliah: `${kelas.matakuliah}`,
       kelas: kelas.kelas,
-      dosen: kelas.dosen.split('\n'),
+      dosen: dosenWithOrder,
       kapasitas: kelas.kapasitas,
       skala: kelas.skala,
     });
     setIsEditModalOpen(true);
   };
+  
+  
   
   const handleUpdateKelas = async (e) => {
     e.preventDefault();
@@ -120,8 +131,10 @@ const AddKelas = () => {
 
       const selectedDosenIds = dosenData
         .filter(dosen => kelasToEdit.dosen.includes(dosen.dosen))
-        .sort((a, b) => kelasToEdit.dosen.indexOf(a.dosen) - kelasToEdit.dosen.indexOf(b.dosen)) 
+        .sort((a, b) => kelasToEdit.dosen.indexOf(a.dosen) - kelasToEdit.dosen.indexOf(b.dosen))
         .map(dosen => dosen.id_dosen);
+
+      
 
       const dataToSend = {
         matkul_id: id_matkul,
@@ -130,6 +143,8 @@ const AddKelas = () => {
         dosen_ids: selectedDosenIds,
         kapasitas: kelasToEdit.kapasitas,
       };
+
+      console.log('Data to Send:', dataToSend);
 
       const response = await fetch(`http://127.0.0.1:5000/api/kelasedit/${kelasToEdit.id_kelas}`, {
         method: 'PUT',
@@ -179,7 +194,6 @@ const AddKelas = () => {
   const handleAddKelas = async (e) => {
   e.preventDefault();
 
-  // Validasi input dosen
   if (listKelasData.dosen.length === 0) {
     setDosenError(true);
     return;
@@ -188,7 +202,7 @@ const AddKelas = () => {
 
   const selectedDosenIds = dosenData
   .filter(dosen => listKelasData.dosen.includes(dosen.dosen))
-  .sort((a, b) => listKelasData.dosen.indexOf(a.dosen) - listKelasData.dosen.indexOf(b.dosen)) // Urutkan sesuai urutan dari backend
+  .sort((a, b) => listKelasData.dosen.indexOf(a.dosen) - listKelasData.dosen.indexOf(b.dosen)) 
   .map(dosen => dosen.id_dosen);
 
 
@@ -350,16 +364,20 @@ const AddKelas = () => {
     {
       accessorKey: 'dosen',
       header: 'Dosen',
-      Cell: ({ row }) => {
-        const dosenData = row.original.dosen;
-        return (
-          <div style={{ whiteSpace: 'pre-line' }}>
-          {dosenData.split('\n').map((dosen, index) => (
-          <div key={index}>{dosen}</div>
-        ))}
-      </div>
-        );
-      }
+      accessorKey: 'dosen',
+      header: 'Dosen',
+      Cell: ({ row }) => (
+        <div>
+          {row.original.dosen.map((dosenId, index) => {
+            const dosenObj = dosenData.find(dosen => dosen.id_dosen === dosenId);
+            return (
+              <div key={index}>
+                {dosenObj ? dosenObj.dosen : 'Dosen tidak ditemukan'}
+              </div>
+            );
+          })}
+        </div>
+  ),
     },    
     { accessorKey: 'kapasitas', header: 'Kapasitas' },
     {
@@ -379,7 +397,7 @@ const AddKelas = () => {
     data: kelasData, 
     enableRowSelection: false,
     initialState: {
-      pagination: { pageSize: 26, pageIndex: 2 },
+      pagination: { pageSize: 30, pageIndex: 0 },
       showGlobalFilter: true,
     },
     muiPaginationProps: {
@@ -623,31 +641,29 @@ const AddKelas = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Autocomplete
-                  multiple
-                  options={dosenData.map((dosen) => dosen.dosen)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Dosen"
-                      name="dosen"
-                      error={dosenErrors}
-                      helperText={
-                        dosenErrors ? 'Silakan pilih maksimal 3 dosen.' : ''
-                      }
-                    />
-                  )}
-                  value={kelasToEdit.dosen || []}
-                  onChange={(event, newValue) => {
-                    if (newValue.length <= 3) {
-                      setKelasToEdit({ ...kelasToEdit, dosen: newValue });
-                      setDosenErrors(false);
-                    } else {
-                      setDosenErrors(true);
-                    }
-                  }}
-                  disableCloseOnSelect
-                />
+              <Autocomplete
+                multiple
+                options={dosenData.map((dosen) => dosen.dosen)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Dosen"
+                    name="dosen"
+                    error={dosenErrors}
+                    helperText={dosenErrors ? 'Silakan pilih maksimal 3 dosen.' : ''}
+                  />
+                )}
+                value={kelasToEdit.dosen || []}
+                onChange={(event, newValue) => {
+                  if (newValue.length <= 3) {
+                    setKelasToEdit({ ...kelasToEdit, dosen: newValue });
+                    setDosenErrors(false);
+                  } else {
+                    setDosenErrors(true);
+                  }
+                }}
+                disableCloseOnSelect
+              />
               </Grid>
               <Grid item xs={12}>
                 <TextField

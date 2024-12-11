@@ -83,7 +83,7 @@
   
 }
 
-/* Error Message Style */
+
 .error-message {
     color: #ff4f4f;
     font-size: 14px;
@@ -92,4 +92,14 @@
     background: #ffdede;
     padding: 8px 10px;
     border-radius: 5px;
+}
+
+
+.toggle-password {
+    position: absolute;
+    right: 10px; 
+    top: 55%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px; 
 }

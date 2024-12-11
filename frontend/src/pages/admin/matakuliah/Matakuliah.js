@@ -4,7 +4,7 @@ import React, { useState,
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete, MdEdit } from "react-icons/md";
-import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Modal, TextField, Button, Grid, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete, } from '@mui/material';
 import { MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD, MRT_TablePagination as MRT_TABLE_BODY_CELL_VALUE, MRT_TableBodyCellValue as MRT_TABLE_PAGINATION, flexRender, useMaterialReactTable } from 'material-react-table';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
@@ -18,13 +18,26 @@ const AddMatakuliah = () => {
   const [confirmationText, setConfirmationText] = useState('');
   const [isMatkulUsed, setIsMatkulUsed] = useState(false);
 
+  const [semesterData, setSemesterData] = useState([]);
+  const [semesterError, setSemesterError] = useState(false);
+
   const [matakuliahs, setMatakuliahs] = useState([]);
   const [matakuliahData, setMatakuliahData] = useState({
     kode: '',
     matakuliah: '',
     sks: '',
+    durasi: '',
     wp: '',
-    semester: '',
+    semester: [],
+    jenjang: '',
+  });
+  const [matakuliahEditData, setMatakuliahEditData] = useState({
+    kode: '',
+    matakuliah: '',
+    sks: '',
+    durasi: '',
+    wp: '',
+    semester: [],
     jenjang: '',
   });
 
@@ -46,15 +59,29 @@ const AddMatakuliah = () => {
     fetchMatakuliahs();
   }, []);
 
+  const fetchData = async (endpoint, setState) => {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      setState(data);
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchData('http://127.0.0.1:5000/api/listsemester', setSemesterData);
+  }, []);
+
   
   const handleOpenAddModal = () => {
-    setMatakuliahData({ kode: '', matakuliah: '', sks: '', wp: '', semester: '', jenjang: '', });
+    setMatakuliahData({ kode: '', matakuliah: '', sks: '', durasi:'', wp: '', semester: [], jenjang: '', });
     setIsAddModalOpen(true);
   };
 
 
   const handleOpenEditModal = (matakuliah) => {
-    setMatakuliahData(matakuliah);
+    setMatakuliahEditData(matakuliah);
     setIsEditModalOpen(true);
   };
 
@@ -70,21 +97,50 @@ const AddMatakuliah = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let durasiOtomatis = '';
+    if (name === 'sks') {
+      if (value === '1') {
+        durasiOtomatis = '1';
+      } else if (value === '2') {
+        durasiOtomatis = '2'; 
+      } else if (value === '3') {
+        durasiOtomatis = '3';
+      }
+    }
+  
     setMatakuliahData(prevData => ({
       ...prevData,
       [name]: value,
-      ...(name === "wp" && value === "P" ? { semester: "All" } : {})
+      ...(name === 'sks' ? { durasi: durasiOtomatis } : {}),
+      ...(name === 'wp' && value === 'P' ? { semester: 'All' } : {})
     }));
   };
+  
   
 
   const handleEditMatakuliah = async (e) => {
     e.preventDefault();
+
+    if (matakuliahEditData.semester.length === 0) {
+      setSemesterError(true);
+      return;
+    }
+
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/matakuliahedit/${matakuliahData.id_matkul}`, {
+      const payload = {
+        kode: matakuliahEditData.kode,
+        matakuliah: matakuliahEditData.matakuliah,
+        sks: matakuliahEditData.sks,
+        durasi: matakuliahEditData.durasi,
+        wp: matakuliahEditData.wp,
+        semester_ids: matakuliahEditData.semester,
+        jenjang: matakuliahEditData.jenjang,
+    };
+
+      const response = await fetch(`http://127.0.0.1:5000/api/matakuliahedit/${matakuliahEditData.id_matkul}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(matakuliahData),
+        body: JSON.stringify(payload),
       });
       if (response.ok) {
         await fetchMatakuliahs();
@@ -99,16 +155,32 @@ const AddMatakuliah = () => {
 
   const handleAddMatakuliah = async (e) => {
     e.preventDefault();
+
+    if (matakuliahData.semester.length === 0) {
+      setSemesterError(true);
+      return;
+    }
+
     try {
+      const payload = {
+        kode: matakuliahData.kode,
+        matakuliah: matakuliahData.matakuliah,
+        sks: matakuliahData.sks,
+        durasi: matakuliahData.durasi,
+        wp: matakuliahData.wp,
+        semester_ids: matakuliahData.semester,
+        jenjang: matakuliahData.jenjang,
+    };
+    
       const response = await fetch('http://127.0.0.1:5000/api/matakuliahadd', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(matakuliahData),
+        body: JSON.stringify(payload),
       });
   
       if (response.ok) {
         await fetchMatakuliahs();
-        setMatakuliahData({ kode: '', matakuliah: '', sks: '', wp: '', semester: '', jenjang: '' });
+        setMatakuliahData({ kode: '', matakuliah: '', sks: '', durasi:'', wp: '', semester: [], jenjang: '' });
         setIsAddModalOpen(false);
       } else {
         console.error('Failed to add matakuliah');
@@ -166,7 +238,15 @@ const AddMatakuliah = () => {
     { accessorKey: 'sks', header: 'SKS' },
     { accessorKey: 'jenjang', header: 'Jenjang' },
     { accessorKey: 'wp', header: 'W/P' },
-    { accessorKey: 'semester', header: 'Semester' },
+    {
+      accessorKey: 'semester',
+      header: 'Semester',
+      Cell: ({ row }) => (
+        <span>
+          {row.original.semester.map((sem) => `Semester ${sem}`).join(', ')}
+        </span>
+      ),
+    },
     {
       accessorKey: "action",
       header: "Action",
@@ -290,11 +370,18 @@ const AddMatakuliah = () => {
               <Grid item xs={12}>
                 <TextField fullWidth label="Matakuliah" name="matakuliah" value={matakuliahData.matakuliah} onChange={handleChange} required />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={6}>
                 <TextField select fullWidth label="SKS" name="sks" value={matakuliahData.sks} onChange={handleChange} required>
                   <MenuItem value="2">2</MenuItem>
                   <MenuItem value="3">3</MenuItem>
                   <MenuItem value="4">4</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField select fullWidth label="Durasi" name="durasi" value={matakuliahData.durasi} onChange={handleChange} required>
+                  <MenuItem value="1">50 menit</MenuItem>
+                  <MenuItem value="2">100 menit</MenuItem>
+                  <MenuItem value="3">150 menit</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
@@ -310,21 +397,35 @@ const AddMatakuliah = () => {
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth 
-                  label="Semester" 
-                  name="semester" 
-                  value={matakuliahData.semester} 
-                  onChange={handleChange} 
-                  required
-                >
-                  <MenuItem value="1">1</MenuItem>
-                  <MenuItem value="2">2</MenuItem>
-                  <MenuItem value="3">3</MenuItem>
-                  <MenuItem value="4">4</MenuItem>
-                  <MenuItem value="5">5</MenuItem>
-                  <MenuItem value="6">6</MenuItem>
-                  <MenuItem value="7">7</MenuItem>
-                </TextField>
+              <Autocomplete
+                      multiple
+                      options={semesterData}
+                      getOptionLabel={(option) => `Semester ${option.semester}`}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Semester"
+                          error={semesterError}
+                          helperText={semesterError ? "Silakan pilih maksimal 3 semester" : ""}
+                        />
+                      )}
+                      value={semesterData.filter((semester) => matakuliahData.semester.includes(semester.id_semester))}
+                      onChange={(event, newValue) => {
+                        if (newValue.length <= 3) {
+                          setMatakuliahData({
+                            ...matakuliahData,
+                            semester: newValue.map((semester) => semester.id_semester),
+                          });
+                          setSemesterError(false);
+                        } else {
+                          setSemesterError(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        setSemesterError(matakuliahData.semester.length === 0 || matakuliahData.semester.length > 3);
+                      }}
+                      disableCloseOnSelect
+                    />
               </Grid>
             </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Add</Button>
@@ -341,53 +442,100 @@ const AddMatakuliah = () => {
           <form onSubmit={handleEditMatakuliah}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField fullWidth label="Kode" name="kode" value={matakuliahData.kode} onChange={handleChange} required />
+                <TextField fullWidth 
+                label="Kode" 
+                name="kode" 
+                value={matakuliahEditData.kode} 
+                onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, kode: e.target.value })
+                } 
+                required 
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Matakuliah" name="matakuliah" value={matakuliahData.matakuliah} onChange={handleChange} required />
+                <TextField fullWidth label="Matakuliah" name="matakuliah" value={matakuliahEditData.matakuliah} 
+                onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, matakuliah: e.target.value })
+                } 
+                required />
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="SKS" name="sks" value={matakuliahData.sks} onChange={handleChange} required>
+                <TextField select fullWidth label="SKS" name="sks" value={matakuliahEditData.sks}
+                 onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, sks: e.target.value })
+                }  
+                 required>
                   <MenuItem value="2">2</MenuItem>
                   <MenuItem value="3">3</MenuItem>
                   <MenuItem value="4">4</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="Jenjang" name="jenjang" value={matakuliahData.jenjang} onChange={handleChange} required>
+                <TextField select fullWidth label="Durasi" name="durasi" value={matakuliahEditData.durasi} 
+                onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, durasi: e.target.value })
+                } 
+                 required>
+                  <MenuItem value="1">50 menit</MenuItem>
+                  <MenuItem value="2">100 menit</MenuItem>
+                  <MenuItem value="3">150 menit</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField select fullWidth label="Jenjang" name="jenjang" value={matakuliahEditData.jenjang} 
+                onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, jenjang: e.target.value })
+                }  
+                required>
                   <MenuItem value="S1">Sarjana</MenuItem>
                   <MenuItem value="S2">Magister</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth label="W/P" name="wp" value={matakuliahData.wp} onChange={handleChange} required>
+                <TextField select fullWidth label="W/P" name="wp" value={matakuliahEditData.wp} 
+                onChange={(e) =>
+                  setMatakuliahEditData({ ...matakuliahEditData, wp: e.target.value })
+                } 
+                required>
                   <MenuItem value="W">Wajib</MenuItem>
                   <MenuItem value="P">Pilihan</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
-                <TextField select fullWidth 
-                  label="Semester" 
-                  name="semester" 
-                  value={matakuliahData.semester} 
-                  onChange={handleChange} 
-                  required
-                >
-                  <MenuItem value="1">1</MenuItem>
-                  <MenuItem value="2">2</MenuItem>
-                  <MenuItem value="3">3</MenuItem>
-                  <MenuItem value="4">4</MenuItem>
-                  <MenuItem value="5">5</MenuItem>
-                  <MenuItem value="6">6</MenuItem>
-                  <MenuItem value="7">7</MenuItem>
-                </TextField>
+              <Autocomplete
+            multiple
+            options={semesterData}
+            getOptionLabel={(option) => `Semester ${option.semester}`}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Semester"
+                error={semesterError}
+                helperText={semesterError ? "Silakan pilih maksimal 3 semester" : ""}
+              />
+            )}
+            value={semesterData.filter((semester) => 
+              matakuliahEditData.semester && matakuliahEditData.semester.includes(semester.id_semester)
+            )}            
+            onChange={(event, newValue) => {
+              if (newValue.length <= 3) {
+                setMatakuliahEditData({
+                  ...matakuliahEditData,
+                  semester: newValue.map((semester) => semester.id_semester),
+                });
+                setSemesterError(false);
+              } else {
+                setSemesterError(true);
+              }
+            }}
+            disableCloseOnSelect
+          />
               </Grid>
             </Grid>
             <Button fullWidth type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>Edit</Button>
           </form>
         </Box>
       </Modal>
-
       </div>
     </div>
   );
