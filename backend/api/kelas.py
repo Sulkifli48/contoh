@@ -72,6 +72,7 @@ def get_kelas():
     return jsonify(data), 200
 
 
+
 @kelas_bp.route('/listrooms', methods=['GET'])
 def get_rooms():
     cur = mysql.connection.cursor()

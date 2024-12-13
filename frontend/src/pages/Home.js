@@ -1,26 +1,104 @@
-import React, { useEffect, useState } from 'react'; // Impor useEffect dan useState
+import React, { useEffect, useState, useCallback } from 'react'; 
 import axios from 'axios'; 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import './Home.css'; 
+import './Home.css'; // Impor CSS untuk styling
 
 const Home = () => {
     const [selectedDay, setSelectedDay] = useState('Senin');
     const [schedule, setSchedule] = useState([]);
-    
+    const [loading, setLoading] = useState(true);
+
+    const [error, setError] = useState('');
+
     const handleDayChange = (event) => {
         setSelectedDay(event.target.value);
     };
 
-    const rooms = ['GR01', 'GR02', 'GR03', 'GR04', 'GR05', 'GR06', 'GR07', 'GR08', 'GR09'];
+    const [ruangan, setruangan] = useState([]);
 
+    // Ruangan yang akan ditampilkan
+    const fetchruanganData = useCallback(async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/api/listruangan');
+            setruangan(response.data.map((ruangan) => ruangan.name)); 
+        } catch (error) {
+            setError("Error fetching ruangan data");
+        }
+    }, []);
 
+    const fetchScheduleData = useCallback(async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/jadwals1');
+            setSchedule(response.data);
+        } catch (error) {
+            setError("Error fetching schedule data");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+    
+    
+
+    useEffect(() => {
+        fetchScheduleData();
+    }, [fetchScheduleData]);
+    
+    useEffect(() => {
+        fetchruanganData();
+    }, [fetchruanganData]);
+    
+    const mergeScheduleData = (scheduleData) => {
+        const mergedSchedule = [];
+    
+        scheduleData.forEach(item => {
+            const existingSchedule = mergedSchedule.find(mergedItem => 
+                mergedItem.kelas === item.kelas && 
+                mergedItem.ruangan === item.ruangan && 
+                mergedItem.hari === item.hari
+            );
+            
+            if (existingSchedule) {
+                existingSchedule.jam.push(...item.jam); // Gabungkan jam
+                existingSchedule.dosen = [...new Set([...existingSchedule.dosen, item.dosen])]; // Gabungkan dosen
+            } else {
+                mergedSchedule.push({
+                    ...item,
+                    dosen: [item.dosen], 
+                    jam: item.jam,
+                    day: item.hari,
+                });
+            }
+        });
+    
+        // Pisahkan jam menjadi start dan end
+        mergedSchedule.forEach(item => {
+            if (item.jam.length > 0) {
+                const sortedTimes = item.jam.sort((a, b) => {
+                    const [startA] = a.split(' - ');
+                    const [startB] = b.split(' - ');
+                    return startA.localeCompare(startB);
+                });
+    
+                // Menentukan waktu mulai (start) dan waktu akhir (end)
+                item.start = sortedTimes[0].split(' - ')[0];
+                item.end = sortedTimes[sortedTimes.length - 1].split(' - ')[1];
+            }
+        });
+    
+        return mergedSchedule;
+    };
+    
+    const mergedSchedule = mergeScheduleData(schedule);
+    
+
+    // Waktu untuk ditampilkan di kolom kiri
     const times = [];
     const morningStartHour = 7;
     const morningStartMinute = 50;
     const morningEndHour = 12;
     const afternoonStartHour = 13;
-    const afternoonEndHour = 16;
+    const afternoonEndHour = 17;
     const interval = 50;
 
     const generateTimes = (startHour, startMinute, endHour, timesArray) => {
@@ -49,137 +127,112 @@ const Home = () => {
 
     generateTimes(morningStartHour, morningStartMinute, morningEndHour, times);
     times.push('12:00 - 13:00');
-    generateTimes(afternoonStartHour, 0, afternoonEndHour, times);
+    generateTimes(afternoonStartHour, 0, afternoonEndHour, times); // Menetapkan menit mulai sesi siang ke 0
 
-    useEffect(() => {
-        // Fetch schedule data from API
-        const fetchSchedule = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/schedule'); // Tidak perlu await response.json();
-                setSchedule(response.data); // Set data dari API langsung
-            } catch (error) {
-                console.error("Error fetching schedule data:", error);
-            }
-        };
     
-        fetchSchedule();
-    }, []);
-    
-
     const calculateRowSpan = (start, end) => {
         const [startHour, startMinute] = start.split(':').map(Number);
         const [endHour, endMinute] = end.split(':').map(Number);
         const startTotalMinutes = startHour * 60 + startMinute;
         const endTotalMinutes = endHour * 60 + endMinute;
-    
+
         return Math.ceil((endTotalMinutes - startTotalMinutes) / interval);
     };
-    
-    const calculateEndTime = (startTime, sks) => {
-        const [startHour, startMinute] = startTime.split(':').map(Number);
-        const totalMinutes = startHour * 60 + startMinute + (sks * 50);
-        const endHour = Math.floor(totalMinutes / 60) % 24;
-        const endMinute = totalMinutes % 60;
-        return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-    };
-    
 
-    const getColorByLevel = (level) => {
-        switch (level) {
-            case 'S1':
-                return '#B8860B';
-            case 'S2':
-                return '#8FBC8F'; 
-            case 'Inter':
-                return '#5F9EA0';
-            default:
-                return '#FFFFFF';
-        }
-    };
+   
 
     return (
         <div>
             <Header />
-                <div className='head'>
-                    <h1 className='head-h1'>Departemen Informatika Universitas Hasanuddin</h1>
-                    <h2 className='head-h2'>Jadwal Perkuliahan Semester Ganjil 2024/2025</h2>
-                </div>
+            <div className='head'>
+                <h1 className='head-h1'>Departemen Informatika Universitas Hasanuddin</h1>
+                <h2 className='head-h2'>Jadwal Perkuliahan Semester Ganjil 2024/2025</h2>
+            </div>
             <div className="container">
                 <div className="day-select">
-                    <label htmlFor="day">Select a day:</label>
+                    <label htmlFor="day">Pilih Hari:</label>
                     <select id="day" value={selectedDay} onChange={handleDayChange}>
                         {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'].map((day) => (
-                            <option key={day} value={day}>
-                                {day}
-                            </option>
+                            <option key={day} value={day}>{day}</option>
                         ))}
                     </select>
                 </div>
 
                 {/* Tabel untuk menampilkan jadwal */}
                 <table className="schedule-table">
-                <thead>
-                    <tr>
-                        <th className="sticky-time">Waktu</th>
-                        {rooms.map((room) => (
-                            <th key={room}>{room}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {times.map((time, index) => {
-                        const [startTime, endTime] = time.split(' - ');
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            {ruangan.map((ruangan) => (
+                                <th key={ruangan}>{ruangan}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {times.map((time, index) => {
+                            const [startTime, endTime] = time.split(' - ');
 
-                        return (
-                            <tr key={index}>
-                                <td className="sticky-time">{time}</td> {/* Kolom Waktu Sticky */}
-                                {rooms.map((room) => {
-                                    const classInSlot = schedule.find(
-                                        (s) =>
-                                            s.room === room &&
-                                            s.start === startTime &&
-                                            s.day === selectedDay
-                                    );
-
-                                    if (classInSlot) {
-                                        const endTimeCalculated = calculateEndTime(classInSlot.start, classInSlot.sks);
-                                        const rowSpan = calculateRowSpan(classInSlot.start, endTimeCalculated);
-                                        const color = getColorByLevel(classInSlot.level);
-                                        return (
-                                            <td key={room} rowSpan={rowSpan}>
-                                                <div className="schedule-matkul" style={{ backgroundColor: color }}>
-                                                    {classInSlot.subject} ({classInSlot.level}) <br />
-                                                    {classInSlot.dosen1} <br />
-                                                    {classInSlot.dosen2 && <>{classInSlot.dosen2}<br /></>}
-                                                    {classInSlot.dosen3 && <>{classInSlot.dosen3}<br /></>}
-                                                </div>
-                                            </td>
+                            return (
+                                <tr key={index}>
+                                    <td>{time}</td>
+                                    {ruangan.map((ruangan) => {
+                                        // Find if there's a class starting at this time
+                                        const classInSlot = mergedSchedule.find(
+                                            (s) =>
+                                                s.ruangan === ruangan &&
+                                                s.start === startTime &&
+                                                s.day === selectedDay
                                         );
-                                    }
 
-                                    const classInRange = schedule.find(
-                                        (s) =>
-                                            s.room === room &&
-                                            calculateEndTime(s.start, s.sks) > startTime &&
-                                            s.start < endTime &&
-                                            s.day === selectedDay
-                                    );
+                                        if (classInSlot) {
+                                            const rowSpan = calculateRowSpan(classInSlot.start, classInSlot.end);
+                                            // Mendapatkan warna berdasarkan tingkatan kelas
+                                            
+                                            return (
+                                                <td key={ruangan} rowSpan={rowSpan}>
+                                                    <div className="schedule-matkul">
+                                                        {classInSlot.kelas}&nbsp;
+                                                        <br />
+                                                        <br />
+                                                        {classInSlot.dosen.map((dosen, idx) => (
+                                                            <React.Fragment key={idx} >
+                                                                <div className='dosen-left'>
+                                                                    {idx + 1}. {dosen}
+                                                                <br /></div>
+                                                            </React.Fragment> 
+                                                      
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            );
+                                        }
 
-                                    if (classInRange) {
-                                        return null;
-                                    }
+                                        // Check if the current time falls within a class's range (skip rendering if rowSpan has already covered it)
+                                        const classInRange = mergedSchedule.find(
+                                            (s) =>
+                                                s.ruangan === ruangan &&
+                                                s.start < endTime &&
+                                                s.end > startTime &&
+                                                s.day === selectedDay
+                                        );
 
-                                    return <td key={room}></td>;
-                                })}
-                            </tr>
-                        );
-                    })}
-                </tbody>
+                                        if (classInRange) {
 
+                                            return null;
+                                        }
+
+                                        return <td key={ruangan}></td>;
+                                    })}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
                 </table>
-                </div>
+            </div>
+            <Footer />
         </div>
     );
 };
 
 export default Home;
+
