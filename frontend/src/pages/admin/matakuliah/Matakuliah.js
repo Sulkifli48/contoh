@@ -243,7 +243,7 @@ const AddMatakuliah = () => {
       header: 'Semester',
       Cell: ({ row }) => (
         <span>
-          {row.original.semester.map((sem) => `Semester ${sem}`).join(', ')}
+          {row.original.semester.map((sem) => ` ${sem}`).join(', ')}
         </span>
       ),
     },

@@ -7,7 +7,7 @@ dosen_bp = Blueprint('dosen', __name__)
 @dosen_bp.route('/listdosen', methods=['GET'])
 def get_dosen():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id_dosen, nip, dosen, room, createdAt FROM dosen_db")
+    cur.execute("SELECT id_dosen, nip, dosen, createdAt FROM dosen_db")
     rows = cur.fetchall()
     cur.close()
     data = [
@@ -15,8 +15,7 @@ def get_dosen():
             'id_dosen': row[0],
             'nip': row[1],
             'dosen': row[2],
-            'room': row[3],
-            'createdAt': row[4],
+            'createdAt': row[3],
         }
         for row in rows
     ]
@@ -28,12 +27,11 @@ def add_dosen():
     data = request.get_json()
     nip = data['nip']
     dosen = data['dosen']
-    room = data['room']
     createdAt = datetime.now()
 
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO dosen_db (nip, dosen, room, createdAt) VALUES (%s, %s, %s, %s)",
-                (nip, dosen, room, createdAt))
+    cur.execute("INSERT INTO dosen_db (nip, dosen, createdAt) VALUES (%s, %s, %s)",
+                (nip, dosen, createdAt))
     mysql.connection.commit()
     cur.close()
 
@@ -79,15 +77,14 @@ def edit_dosen(id_dosen):
     data = request.get_json()
     nip = data.get('nip')
     dosen = data.get('dosen')
-    room = data.get('room')
 
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
             UPDATE dosen_db 
-            SET nip = %s, dosen = %s, room = %s
+            SET nip = %s, dosen = %s
             WHERE id_dosen = %s
-        """, (nip, dosen, room, id_dosen))
+        """, (nip, dosen, id_dosen))
         mysql.connection.commit()
         cur.close()
 
