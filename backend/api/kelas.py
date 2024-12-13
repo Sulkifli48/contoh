@@ -16,7 +16,11 @@ def get_kelas():
             GROUP_CONCAT(DISTINCT dosen_db.dosen ORDER BY kelas_dosen.urutan_dosen SEPARATOR '/n ') AS dosen,
             GROUP_CONCAT(DISTINCT rooms_db.rooms ORDER BY kelas_rooms.urutan_rooms SEPARATOR ', ') AS rooms,
             kelas_db.kapasitas,
-            kelas_db.createdAt
+            kelas_db.createdAt,
+            matakuliah_db.jenjang,
+            matakuliah_db.wp,
+            GROUP_CONCAT(DISTINCT semester_db.semester ORDER BY semester_db.semester SEPARATOR ', ') AS semester_list,
+            matakuliah_db.durasi
         FROM 
             kelas_db
         JOIN 
@@ -29,8 +33,20 @@ def get_kelas():
             kelas_rooms ON kelas_db.id_kelas = kelas_rooms.kelas_id
         LEFT JOIN 
             rooms_db ON kelas_rooms.rooms_id = rooms_db.id_rooms
+        LEFT JOIN 
+            semester_matakuliah ON matakuliah_db.id_matkul = semester_matakuliah.matkul_id
+        LEFT JOIN 
+            semester_db ON semester_matakuliah.semester_id = semester_db.id_semester
         GROUP BY 
-            kelas_db.id_kelas, matakuliah_db.matakuliah, kelas_db.skala, kelas_db.kelas, kelas_db.kapasitas, kelas_db.createdAt
+            kelas_db.id_kelas, 
+            matakuliah_db.matakuliah, 
+            kelas_db.skala, 
+            kelas_db.kelas, 
+            kelas_db.kapasitas, 
+            kelas_db.createdAt, 
+            matakuliah_db.jenjang,
+            matakuliah_db.wp,
+            matakuliah_db.durasi
     """)
     rows = cur.fetchall()
     cur.close()
@@ -41,10 +57,14 @@ def get_kelas():
             'matakuliah': row[1],
             'skala': row[2],
             'kelas': row[3],
-            'dosen': row[4].split('/n ') if row[4] else [], 
+            'dosen': row[4].split('/n ') if row[4] else [],
             'rooms': (row[5].split(', ') if row[5] else []) + ['alternatif'],
             'kapasitas': row[6],
             'createdAt': row[7],
+            'jenjang': row[8],
+            'wp': row[9],
+            'semester': [int(x) for x in row[10].split(', ')] if row[10] else [],
+            'durasi': row[11],
         }
         for row in rows
     ]

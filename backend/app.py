@@ -8,6 +8,7 @@ from api.dosen import dosen_bp
 from api.ruangan import ruangan_bp
 from api.kelas import kelas_bp
 from api.home import home_bp
+from api.jadwals1 import jadwals1_bp
 
 app = Flask(__name__)
 
@@ -22,6 +23,7 @@ app.register_blueprint(dosen_bp, url_prefix='/api')
 app.register_blueprint(ruangan_bp, url_prefix='/api')
 app.register_blueprint(kelas_bp, url_prefix='/api')
 app.register_blueprint(home_bp, url_prefix='/api')
+app.register_blueprint(jadwals1_bp, url_prefix='/api')
 
 if __name__ == '__main__':
     app.run(debug=True)
