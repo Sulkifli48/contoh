@@ -1,6 +1,6 @@
 .head {
-    text-align: center; /* Mengatur elemen dalam head agar berada di tengah */
-    margin-top: 35px;  /* Memberi jarak agar tidak terlalu berdekatan dengan tombol login */
+    text-align: center;
+    margin-top: 35px;
 }
 
 .head-h1 {
@@ -11,123 +11,104 @@
     font-size: 20px;
 }
 
-/* Container untuk layout utama */
 .container {
     padding: 20px;
+    overflow-x: auto;
 }
 
-/* Tombol hari */
-.day-buttons {
+.day-select {
     margin-bottom: 20px;
 }
 
-.day-buttons button {
-    margin-right: 10px;
-    padding: 10px;
-    cursor: pointer;
-    background-color: #003366;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.day-buttons button:hover {
-    background-color: #0056b3;
-}
-
-.day-buttons button.active {
-    background-color: #0056b3; /* Warna saat tombol aktif */
-}
-
-/* Dropdown hari */
-.day-select {
-    margin-bottom: 20px; /* Beri ruang di bawah dropdown */
-}
-
 .day-select label {
-    font-size: 18px; /* Ukuran font label lebih besar */
+    font-size: 18px;
     font-weight: bold;
-    margin-right: 10px; /* Jarak antara label dan dropdown */
+    margin-right: 10px;
 }
 
 .day-select select {
-    font-size: 18px; /* Ukuran font lebih besar */
-    padding: 6px 1px; /* Tambahkan padding */
-    border-radius: 10px; /* Sudut melengkung */
-    border: 2px solid #007bff; /* Border biru */
-    background-color: #f8f9fa; /* Background terang */
-    color: #333; /* Warna teks */
-    transition: all 0.3s ease; /* Efek transisi */
-    cursor: pointer; /* Kursor pointer */
+    font-size: 18px;
+    padding: 6px 1px;
+    border-radius: 10px;
+    border: 2px solid #007bff;
+    background-color: #f8f9fa;
+    color: #333;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .day-select select:hover {
     background-color: #e2e6ea;
-    border-color: #0056b3; 
+    border-color: #0056b3;
 }
 
 .day-select select:focus {
-    outline: none; /* Hilangkan outline default */
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Shadow saat fokus */
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
-
-/* Tabel jadwal */
 
 .schedule-table th,
 .schedule-table td {
-    border: 1px solid #d8d8d8; 
-    padding: 0; 
-    text-align: center; 
-    height: 60px; 
+    border: 1px solid #d8d8d8;
+    padding: 10px;
+    text-align: center;
+    height: 60px;
     vertical-align: middle;
-    min-width: 220px; 
-    
+    min-width: 220px;
 }
-
-.schedule-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    overflow-x: auto;
-    display: block;
-    white-space: nowrap;
-    max-width: 100%;
-}
-
-
 
 .schedule-table th {
     background-color: #063d63;
     color: #fff;
 }
 
-/* Kolom waktu sticky */
 .sticky-time {
     position: sticky;
     left: 0;
     background-color: #f8f8f8;
     z-index: 1;
-    min-width: 100px; 
+    min-width: 100px;
 }
 
 .schedule-matkul {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     color: white;
     height: 100%;
     box-sizing: border-box;
-    padding: 8px; 
-    font-size: 1rem; /* Ukuran font lebih besar */
+    padding: 8px;
+    font-size: 1rem;
+    background-color: #007bff;
+    border-radius: 5px;
+    margin: 2px;
 }
 
-/* Container scroll */
-.container {
-    overflow-x: auto;
-    padding: 20px;
+.schedule-matkul span {
+    font-weight: bold;
 }
 
+.dosen-left {
+    text-align: left;
+    display: block;
+    width: 100%;
+    margin-left: 0;
+}
 
+@media (max-width: 768px) {
+    .schedule-table th,
+    .schedule-table td {
+        width: 100px;
+        font-size: 12px;
+    }
+}
 
-
+.schedule-table th,
+.schedule-table td {
+    padding: 1px;
+    vertical-align: middle;
+    width: 450px;
+    height: 90px;
+    box-sizing: border-box;
+}
