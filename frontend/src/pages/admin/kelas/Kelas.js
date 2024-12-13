@@ -41,10 +41,13 @@ const AddKelas = () => {
   const [kelasToDelete, setKelasToDelete] = useState({ id_kelas: '', kelas: '' });
   const [confirmationText, setConfirmationText] = useState('');
   const [skalaWarning, setSkalaWarning] = useState('');
-  
+ 
+
   // const [matakuliahs, setMatakuliahs] = useState([]);
   const [matakuliahError, setMatakuliahError] = useState(false);
   const [matakuliahsData, setMatakuliahsData] = useState([]);
+  const [roomsError, setRoomsError] = useState(false);
+  const [roomsData, setRoomsData] = useState([]);
   
   const [dosenData, setDosenData] = useState([]);
   const [dosenError, setDosenError] = useState(false);
@@ -55,6 +58,7 @@ const AddKelas = () => {
     matakuliah: '',
     kelas: '',
     dosen: [],
+    rooms: [],
     kapasitas: '',
     skala: '',
   });
@@ -65,6 +69,7 @@ const AddKelas = () => {
     matakuliah: '',
     kelas: '',
     dosen: [],
+    rooms: [],
     kapasitas: '',
     skala: '',
   });
@@ -82,30 +87,36 @@ const AddKelas = () => {
   
   useEffect(() => {
     fetchData('http://127.0.0.1:5000/api/listmatakuliah', setMatakuliahsData);
+    fetchData('http://127.0.0.1:5000/api/listrooms', setRoomsData);
     fetchData('http://127.0.0.1:5000/api/listdosen', setDosenData);
     fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
   }, []);
 
   const handleEditKelas = (kelas) => {
     const dosenWithOrder = dosenData
-      .filter(dosen => kelas.dosen.includes(dosen.id_dosen))
-      .sort((a, b) => {
-        const indexA = kelas.dosen.indexOf(a.id_dosen);
-        const indexB = kelas.dosen.indexOf(b.id_dosen);
-        return indexA - indexB;
-      })
-      .map(dosen => dosen.dosen);
-  
+        .filter(dosen => kelas.dosen.includes(dosen.dosen))
+        .sort((a, b) => {
+            const indexA = kelas.dosen.indexOf(a.dosen);
+            const indexB = kelas.dosen.indexOf(b.dosen);
+            return indexA - indexB;
+        })
+        .map(dosen => dosen.dosen);
+
+    // Filter rooms untuk menghapus "alternatif"
+    const filteredRooms = kelas.rooms ? kelas.rooms.filter(room => room !== "alternatif") : [];
+
     setKelasToEdit({
-      id_kelas: kelas.id_kelas,
-      matakuliah: `${kelas.matakuliah}`,
-      kelas: kelas.kelas,
-      dosen: dosenWithOrder,
-      kapasitas: kelas.kapasitas,
-      skala: kelas.skala,
+        id_kelas: kelas.id_kelas,
+        matakuliah: `${kelas.matakuliah}`,
+        kelas: kelas.kelas,
+        dosen: dosenWithOrder,
+        rooms: filteredRooms, // Menggunakan rooms yang sudah difilter
+        kapasitas: kelas.kapasitas,
+        skala: kelas.skala,
     });
     setIsEditModalOpen(true);
-  };
+};
+
   
   
   
@@ -118,8 +129,8 @@ const AddKelas = () => {
     }
     setDosenErrors(false);
 
+
     try {
-      // Ambil ID matakuliah dari nama
       const selectedMatakuliah = matakuliahsData.find(
         matkul => matkul.matakuliah === kelasToEdit.matakuliah
       );
@@ -134,6 +145,11 @@ const AddKelas = () => {
         .sort((a, b) => kelasToEdit.dosen.indexOf(a.dosen) - kelasToEdit.dosen.indexOf(b.dosen))
         .map(dosen => dosen.id_dosen);
 
+      const selectedRoomsIds = roomsData
+        .filter(rooms => kelasToEdit.rooms.includes(rooms.rooms))
+        .sort((a, b) => kelasToEdit.rooms.indexOf(a.rooms) - kelasToEdit.rooms.indexOf(b.rooms))
+        .map(rooms => rooms.id_rooms);
+
       
 
       const dataToSend = {
@@ -141,6 +157,7 @@ const AddKelas = () => {
         skala: kelasToEdit.skala,
         kelas: kelasToEdit.kelas,
         dosen_ids: selectedDosenIds,
+        rooms_ids: selectedRoomsIds,
         kapasitas: kelasToEdit.kapasitas,
       };
 
@@ -174,6 +191,7 @@ const AddKelas = () => {
       matakuliah: '',
       kelas: '',
       dosen: [],
+      rooms: [],
       kapasitas: '',
       skala: '', });
     setIsAddModalOpen(true);
@@ -205,9 +223,14 @@ const AddKelas = () => {
   .sort((a, b) => listKelasData.dosen.indexOf(a.dosen) - listKelasData.dosen.indexOf(b.dosen)) 
   .map(dosen => dosen.id_dosen);
 
+  const selectedRoomsIds = roomsData
+  .filter(rooms => listKelasData.rooms.includes(rooms.rooms))
+  .sort((a, b) => listKelasData.rooms.indexOf(a.rooms) - listKelasData.rooms.indexOf(b.rooms)) 
+  .map(rooms => rooms.id_rooms);
 
 
   console.log("Selected Dosen IDs:", selectedDosenIds);
+  console.log("Selected Dosen IDs:", selectedRoomsIds);
   console.log("List Kelas Data:", listKelasData);
 
 
@@ -238,6 +261,7 @@ const AddKelas = () => {
     skala: listKelasData.skala,
     kelas: listKelasData.kelas,
     dosen_ids: selectedDosenIds,
+    rooms_ids: selectedRoomsIds,
     kapasitas: listKelasData.kapasitas,
   };
 
@@ -261,6 +285,7 @@ const AddKelas = () => {
         matakuliah: '',
         kelas: '',
         dosen: [],
+        rooms: [],
         kapasitas: '',
         skala: '',
       });
@@ -288,10 +313,9 @@ const AddKelas = () => {
             });
 
             if (response.ok) {
-                // Perbarui state untuk menghapus kelas dari daftar kelas yang ada
                 setKelasData(kelasData.filter(kelas => kelas.id_kelas !== kelasToDelete.id_kelas));
-                setIsDeleteDialogOpen(false); // Tutup dialog setelah berhasil
-                setConfirmationText(''); // Reset teks konfirmasi
+                setIsDeleteDialogOpen(false);
+                setConfirmationText(''); 
             } else {
                 console.error('Gagal menghapus kelas');
             }
@@ -325,6 +349,9 @@ const AddKelas = () => {
         } else {
           setSkalaWarning('Hanya bisa ada satu kelas "Inter" untuk mata kuliah ini.');
         }
+        setListKelasData(prevData => ({ 
+          ...prevData, rooms: ["inter"], 
+        }));
       } else if (listKelasData.skala === 'MBKM') {
         const matkulData = matakuliahsData.find(item => item.matakuliah === namaMatkul);
         if (matkulData && matkulData.wp === 'P') { // Hanya mata kuliah pilihan
@@ -335,7 +362,9 @@ const AddKelas = () => {
           }
         } else {
           setSkalaWarning('Hanya mata kuliah pilihan yang bisa dimasukkan ke skala "MBKM".');
-        }
+        }setListKelasData(prevData => ({ 
+          ...prevData, rooms: ["MBKM"], 
+        }));
       }
   
       
@@ -364,12 +393,10 @@ const AddKelas = () => {
     {
       accessorKey: 'dosen',
       header: 'Dosen',
-      accessorKey: 'dosen',
-      header: 'Dosen',
       Cell: ({ row }) => (
         <div>
           {row.original.dosen.map((dosenId, index) => {
-            const dosenObj = dosenData.find(dosen => dosen.id_dosen === dosenId);
+            const dosenObj = dosenData.find(dosen => dosen.dosen === dosenId);
             return (
               <div key={index}>
                 {dosenObj ? dosenObj.dosen : 'Dosen tidak ditemukan'}
@@ -564,6 +591,34 @@ const AddKelas = () => {
                     disableCloseOnSelect
                   />
                 </Grid>
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={roomsData.map((rooms) => rooms.rooms)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Prioritas Ruangan"
+                        name="rooms"
+                        error={roomsError}
+                        helperText={roomsError ? "Silakan pilih ruangan yang kurang dari 2" : ""}
+                      />
+                    )}
+                    value={listKelasData.rooms}
+                    onChange={(event, newValue) => {
+                      if (newValue.length <= 2) { 
+                      setListKelasData({ ...listKelasData, rooms: newValue });
+                      setRoomsError(false); 
+                    }else {
+                      setRoomsError(true);
+                    }}}
+                    onBlur={() => {
+                      setRoomsError(listKelasData.rooms.length === 0 || listKelasData.rooms.length > 2);
+                    }}
+                    freeSolo={false} 
+                    filterSelectedOptions 
+                  />
+                </Grid>
                 {/* input kapasitas */}
                 <Grid item xs={12}>
                   <TextField fullWidth label="Kapasitas" name="kapasitas" value={listKelasData.kapasitas} onChange={handleChange} required />
@@ -643,14 +698,14 @@ const AddKelas = () => {
               <Grid item xs={12}>
               <Autocomplete
                 multiple
-                options={dosenData.map((dosen) => dosen.dosen)}
+                options={roomsData.map((room) => room.rooms)} 
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Dosen"
                     name="dosen"
                     error={dosenErrors}
-                    helperText={dosenErrors ? 'Silakan pilih maksimal 3 dosen.' : ''}
+                    helperText={dosenErrors ? 'Silakan pilih maksimal 2 dosen.' : ''}
                   />
                 )}
                 value={kelasToEdit.dosen || []}
@@ -662,7 +717,38 @@ const AddKelas = () => {
                     setDosenErrors(true);
                   }
                 }}
-                disableCloseOnSelect
+                onBlur={() => {
+                  setDosenErrors(kelasToEdit.dosen.length > 2);
+                }}
+              />
+              </Grid>
+              <Grid item xs={12}>
+              <Autocomplete
+                multiple
+                options={roomsData.map((rooms) => rooms.rooms)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Prioritas Ruangan"
+                    name="rooms"
+                    error={roomsError}
+                    helperText={roomsError ? 'Silakan pilih maksimal 2 rooms.' : ''}
+                  />
+                )}
+                value={kelasToEdit.rooms || []}
+                onChange={(event, newValue) => {
+                  if (newValue.length <= 2) {
+                    setKelasToEdit({ ...kelasToEdit, rooms: newValue });
+                    setRoomsError(false);
+                  } else {
+                    setRoomsError(true);
+                  }
+                }}
+                onBlur={() => {
+                  setRoomsError( kelasToEdit.rooms.length > 2);
+                }}
+                freeSolo={false} 
+                filterSelectedOptions
               />
               </Grid>
               <Grid item xs={12}>

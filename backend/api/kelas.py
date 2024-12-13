@@ -13,7 +13,8 @@ def get_kelas():
             matakuliah_db.matakuliah,
             kelas_db.skala,
             kelas_db.kelas,
-            GROUP_CONCAT(dosen_db.id_dosen ORDER BY kelas_dosen.urutan_dosen SEPARATOR ', '),
+            GROUP_CONCAT(DISTINCT dosen_db.dosen ORDER BY kelas_dosen.urutan_dosen SEPARATOR '/n ') AS dosen,
+            GROUP_CONCAT(DISTINCT rooms_db.rooms ORDER BY kelas_rooms.urutan_rooms SEPARATOR ', ') AS rooms,
             kelas_db.kapasitas,
             kelas_db.createdAt
         FROM 
@@ -24,23 +25,47 @@ def get_kelas():
             kelas_dosen ON kelas_db.id_kelas = kelas_dosen.kelas_id
         LEFT JOIN 
             dosen_db ON kelas_dosen.dosen_id = dosen_db.id_dosen
+        LEFT JOIN 
+            kelas_rooms ON kelas_db.id_kelas = kelas_rooms.kelas_id
+        LEFT JOIN 
+            rooms_db ON kelas_rooms.rooms_id = rooms_db.id_rooms
         GROUP BY 
             kelas_db.id_kelas, matakuliah_db.matakuliah, kelas_db.skala, kelas_db.kelas, kelas_db.kapasitas, kelas_db.createdAt
     """)
     rows = cur.fetchall()
     cur.close()
+
     data = [
         {
             'id_kelas': row[0],
             'matakuliah': row[1],
             'skala': row[2],
             'kelas': row[3],
-            'dosen': [int(x) for x in row[4].split(', ')] if row[4] else [],
-            'kapasitas': row[5],
-            'createdAt': row[6],
+            'dosen': row[4].split('/n ') if row[4] else [], 
+            'rooms': (row[5].split(', ') if row[5] else []) + ['alternatif'],
+            'kapasitas': row[6],
+            'createdAt': row[7],
         }
         for row in rows
     ]
+    
+    return jsonify(data), 200
+
+
+@kelas_bp.route('/listrooms', methods=['GET'])
+def get_rooms():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id_rooms, rooms FROM rooms_db")
+    rows = cur.fetchall()
+    cur.close()
+    data = [
+        {
+            'id_rooms': row[0],
+            'rooms': row[1],
+        }
+        for row in rows
+    ]
+    
     return jsonify(data), 200
 
 @kelas_bp.route('/kelasadd', methods=['POST'])
@@ -52,14 +77,10 @@ def add_kelas():
         kelas = data['kelas']
         kapasitas = data['kapasitas']
         dosen_ids = data['dosen_ids'] 
-
-        # Validasi nilai 'skala'
-        if skala not in ["Inter", "Nasional", "MBKM"]:
-            return jsonify({"error": "Nilai skala harus 'Inter' atau 'Nasional'"}), 400
+        rooms_ids = data['rooms_ids']
 
         cur = mysql.connection.cursor()
-        sorted_dosen_ids = dosen_ids  
-
+        
         # Masukkan data kelas ke dalam database
         cur.execute("""
             INSERT INTO kelas_db (matkul_id, skala, kelas, kapasitas)
@@ -70,18 +91,24 @@ def add_kelas():
         kelas_id = cur.lastrowid
 
         # Masukkan data dosen terkait kelas dengan urutan yang sudah disortir
-        for urutan, dosen_id in enumerate(sorted_dosen_ids, start=1):
+        for urutan, dosen_id in enumerate(dosen_ids, start=1):
             cur.execute("""
                 INSERT INTO kelas_dosen (kelas_id, dosen_id, urutan_dosen)
                 VALUES (%s, %s, %s)
             """, (kelas_id, dosen_id, urutan))
 
+        # Masukkan data rooms terkait kelas dengan urutan yang sudah disortir
+        for urutan, rooms_id in enumerate(rooms_ids, start=1):
+            cur.execute("""
+                INSERT INTO kelas_rooms (kelas_id, rooms_id, urutan_rooms)
+                VALUES (%s, %s, %s)
+            """, (kelas_id, rooms_id, urutan))
 
         # Menyimpan perubahan
         mysql.connection.commit()
         cur.close()
 
-        return jsonify({"message": "Kelas berhasil ditambahkan dengan dosen terkait"}), 200
+        return jsonify({"message": "Kelas berhasil ditambahkan dengan dosen dan ruangan terkait"}), 200
 
     except Exception as e:
         print("Error terjadi:", e)
@@ -93,8 +120,9 @@ def delete_kelas(id_kelas):
     try:
         cur = mysql.connection.cursor()
 
-        # Hapus entri terkait dari tabel kelas_dosen terlebih dahulu
+        # Hapus entri terkait dari tabel kelas_dosen dan kelas_rooms terlebih dahulu
         cur.execute("DELETE FROM kelas_dosen WHERE kelas_id = %s", (id_kelas,))
+        cur.execute("DELETE FROM kelas_rooms WHERE kelas_id = %s", (id_kelas,))
 
         # Hapus kelas dari tabel kelas_db
         cur.execute("DELETE FROM kelas_db WHERE id_kelas = %s", (id_kelas,))
@@ -118,6 +146,7 @@ def edit_kelas(id_kelas):
         kelas = data.get('kelas')
         kapasitas = data.get('kapasitas')
         dosen_ids = data.get('dosen_ids', []) 
+        rooms_ids = data.get('rooms_ids', [])
 
         cur = mysql.connection.cursor()
 
@@ -137,6 +166,16 @@ def edit_kelas(id_kelas):
                 INSERT INTO kelas_dosen (kelas_id, dosen_id, urutan_dosen)
                 VALUES (%s, %s, %s)
             """, (id_kelas, dosen_id, urutan))
+
+        # Hapus data rooms yang terkait kelas ini di tabel kelas_rooms
+        cur.execute("DELETE FROM kelas_rooms WHERE kelas_id = %s", (id_kelas,))
+
+        # Masukkan data rooms baru dengan urutan sesuai frontend
+        for urutan, rooms_id in enumerate(rooms_ids, start=1):
+            cur.execute("""
+                INSERT INTO kelas_rooms (kelas_id, rooms_id, urutan_rooms)
+                VALUES (%s, %s, %s)
+            """, (id_kelas, rooms_id, urutan))
 
         # Commit perubahan
         mysql.connection.commit()
