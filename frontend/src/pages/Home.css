@@ -80,10 +80,16 @@
     box-sizing: border-box;
     padding: 8px;
     font-size: 1rem;
-    background-color: #007bff;
+    background-color: #007bff;  /* Warna biru default */
     border-radius: 5px;
     margin: 2px;
 }
+
+/* Tambahkan kelas baru untuk jadwal yang bertabrakan */
+.schedule-matkul.conflict {
+    background-color: #ff4d4d; /* Warna merah jika bertabrakan */
+}
+
 
 .schedule-matkul span {
     font-weight: bold;
@@ -95,6 +101,22 @@
     width: 100%;
     margin-left: 0;
 }
+.loading-message {
+    font-size: 16px;
+    font-weight: bold;
+    color: #007bff;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.error-message {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff0000;
+    text-align: center;
+    margin-top: 20px;
+}
+
 
 @media (max-width: 768px) {
     .schedule-table th,
