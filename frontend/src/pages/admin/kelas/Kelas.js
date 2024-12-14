@@ -23,7 +23,7 @@ import {
   DialogContent, 
   DialogActions, 
   Autocomplete, 
-  // FormHelperText,
+  CircularProgress,
   IconButton,
 } from '@mui/material';
 import {  
@@ -41,6 +41,8 @@ const AddKelas = () => {
   const [kelasToDelete, setKelasToDelete] = useState({ id_kelas: '', kelas: '' });
   const [confirmationText, setConfirmationText] = useState('');
   const [skalaWarning, setSkalaWarning] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
  
 
   // const [matakuliahs, setMatakuliahs] = useState([]);
@@ -77,11 +79,15 @@ const AddKelas = () => {
   
   const fetchData = async (endpoint, setState) => {
     try {
+      setLoading(true);
       const response = await fetch(endpoint);
       const data = await response.json();
       setState(data);
     } catch (error) {
-      console.error(`Error fetching ${endpoint}:`, error);
+      setError("Gagal mengambil data jadwal. Silakan coba lagi.");
+      console.error(error);
+    } finally {
+      setLoading(false); 
     }
   };
   
@@ -442,45 +448,62 @@ const AddKelas = () => {
         <div className='card-list-matakuliah'>
           <h1>Daftar Kelas</h1>
           <Stack>
-            <TableContainer className='border-list-matakuliah'>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
-                <button
-                  style={{ width: '190px', height: '40px', background: '#3F72AF', borderRadius: '40px', color: 'white', fontWeight: 500 }}
-                  onClick={handleOpenAddModal}
-                >
-                  Tambah Kelas
-                </button>
-                <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
-              </Box>
-              <Table>
-                <TableHead className='border-botton'>
-                  {table.getHeaderGroups().map(headerGroup => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map(header => (
-                        <TableCell align="center" variant="head" key={header.id}>
-                          <span style={{ fontWeight: 'bold', fontSize: "15px" }}>
-                            {flexRender(header.column.columnDef.Header ?? header.column.columnDef.header, header.getContext())}
-                          </span>
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHead>
-                <TableBody>
-                  {table.getRowModel().rows.map(row => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map(cell => (
-                        <TableCell align="center" key={cell.id}>
-                          <MRT_TABLE_BODY_CELL_VALUE cell={cell} table={table} />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <MRT_TABLE_PAGINATION table={table} />
-
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <CircularProgress />
+                <Typography variant="h6">Loading...</Typography>
+              </div>
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Typography color="error">{error}</Typography>
+              </div>
+            ) : (
+              <TableContainer className="border-list-matakuliah">
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
+                  <button
+                    style={{
+                      width: '190px',
+                      height: '40px',
+                      background: '#3F72AF',
+                      borderRadius: '40px',
+                      color: 'white',
+                      fontWeight: 500,
+                    }}
+                    onClick={handleOpenAddModal}
+                  >
+                    Tambah Kelas
+                  </button>
+                  <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
+                </Box>
+                <Table>
+                  <TableHead className="border-botton">
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <TableCell align="center" variant="head" key={header.id}>
+                            <span style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                              {flexRender(header.column.columnDef.Header ?? header.column.columnDef.header, header.getContext())}
+                            </span>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHead>
+                  <TableBody>
+                    {table.getRowModel().rows.map(row => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map(cell => (
+                          <TableCell align="center" key={cell.id}>
+                            <MRT_TABLE_BODY_CELL_VALUE cell={cell} table={table} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+            {table && <MRT_TABLE_PAGINATION table={table} />}
           </Stack>
         </div>
 
