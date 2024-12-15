@@ -6,7 +6,7 @@ import {
     Typography, 
     CircularProgress,
   } from '@mui/material';
-import './Home.css'; // Impor CSS untuk styling
+import './Home.css'; 
 
 const Home = () => {
     const [selectedDay, setSelectedDay] = useState('Senin');
@@ -21,7 +21,6 @@ const Home = () => {
 
     const [ruangan, setruangan] = useState([]);
 
-    // Ruangan yang akan ditampilkan
     const fetchruanganData = useCallback(async () => {
         try {
             const response = await axios.get('http://127.0.0.1:5000/api/listruangan');
@@ -42,8 +41,6 @@ const Home = () => {
         }
     }, []);
     
-    
-
     useEffect(() => {
         fetchScheduleData();
     }, [fetchScheduleData]);
@@ -52,38 +49,68 @@ const Home = () => {
         fetchruanganData();
     }, [fetchruanganData]);
 
-    
-    
-    const mergeScheduleData = (schedule) => {
+
+     const mergeScheduleData = (schedule) => {
         const mergedSchedule = [];
     
+        const parseWeekRange = (weekRange) => {
+            const [start, end] = weekRange.split('-').map(Number);
+            return { start, end };
+        };
+    
+        const sortWeeksAndFollowDosen = (weeks, dosens) => {
+            const parsedWeeks = weeks.map((week, index) => ({
+                week,
+                dosen: dosens[index],
+                ...parseWeekRange(week),
+            }));
+            parsedWeeks.sort((a, b) => a.start - b.start);
+            return {
+                sortedWeeks: parsedWeeks.map((item) => item.week),
+                sortedDosens: parsedWeeks.map((item) => item.dosen),
+            };
+        };
+    
         schedule.forEach(item => {
-            const existingSchedule = mergedSchedule.find(mergedItem => 
-                mergedItem.kelas === item.kelas && 
-                mergedItem.ruangan === item.ruangan && 
+            // Cari entri jadwal yang sama berdasarkan kombinasi kelas, ruangan, dan hari
+            const existingSchedule = mergedSchedule.find(mergedItem =>
+                mergedItem.kelas === item.kelas &&
+                mergedItem.ruangan === item.ruangan &&
                 mergedItem.hari === item.hari
             );
     
             if (existingSchedule) {
-                // Hanya tambahkan jam jika belum ada dalam daftar jam
+                // Gabungkan daftar jam
                 item.jam.forEach(jam => {
                     if (!existingSchedule.jam.includes(jam)) {
                         existingSchedule.jam.push(jam);
                     }
                 });
-                // Gabungkan dosen yang unik
-                existingSchedule.dosen = [...new Set([...existingSchedule.dosen, item.dosen])];
+    
+                // Gabungkan nilai minggu
+                if (!existingSchedule.minggu.includes(item.minggu)) {
+                    existingSchedule.minggu.push(item.minggu);
+                    existingSchedule.dosen.push(item.dosen);
+                }
+
+                 // Urutan dosen berdasarkan minggu
+                const { sortedWeeks, sortedDosens } = sortWeeksAndFollowDosen(existingSchedule.minggu, existingSchedule.dosen);
+                existingSchedule.minggu = sortedWeeks;
+                existingSchedule.dosen = sortedDosens;
+    
             } else {
                 mergedSchedule.push({
                     ...item,
                     dosen: [item.dosen],
                     jam: [...item.jam],
+                    minggu: [item.minggu],
                     day: item.hari,
                     isConflict: false,
                 });
             }
         });
     
+        // Urutkan dan set waktu mulai dan selesai
         mergedSchedule.forEach(item => {
             if (item.jam.length > 0) {
                 const sortedTimes = item.jam.sort((a, b) => {
@@ -96,28 +123,108 @@ const Home = () => {
                 item.end = sortedTimes[sortedTimes.length - 1].split(' - ')[1];
             }
         });
-    
+
+        // Aturan umum
         mergedSchedule.forEach(item => {
-            const conflictingItem = mergedSchedule.find(
-                other => other.ruangan === item.ruangan &&
-                         other.start < item.end && other.end > item.start && 
-                         other.day === item.day && other !== item
+            const conflictingItemByDosen = mergedSchedule.find(
+                other =>
+                    other !== item &&
+                    other.day === item.day &&
+                    other.start < item.end &&
+                    other.end > item.start &&
+                    other.dosen.some((dosen, index) => 
+                        item.dosen[index] && item.dosen[index] === dosen // Cocokkan berdasarkan posisi
+                    )
             );
-            if (conflictingItem) {
-                item.isConflict = true; 
+
+            const conflictingItemByRuangan = mergedSchedule.find(
+                other =>
+                    other !== item &&
+                    other.day === item.day &&
+                    other.ruangan === item.ruangan &&
+                    other.start < item.end &&
+                    other.end > item.start
+            );
+
+            if (conflictingItemByDosen || conflictingItemByRuangan) {
+                item.isConflict = true;
+            }
+        });
+        
+        // Aturan Khusus
+        mergedSchedule.forEach(item => {
+            if (item.dosen.length === 3) {
+                const dosenUrutanKedua = item.dosen[1];
+    
+                const conflictingBySpecialRule = mergedSchedule.filter(
+                    other =>
+                        other !== item &&
+                        other.day === item.day &&
+                        other.start < item.end &&
+                        other.end > item.start &&
+                        other.dosen.includes(dosenUrutanKedua)
+                );
+    
+                if (conflictingBySpecialRule.length > 0) {
+                    item.isConflict = true;
+                    conflictingBySpecialRule.forEach(conflictingItem => {
+                        conflictingItem.isConflict = true;
+                    });
+                }
+            }
+    
+            if (item.dosen.length === 1) {
+                const dosenUrutanSatu = item.dosen[0];
+    
+                const conflictingBySpecialRule = mergedSchedule.filter(
+                    other =>
+                        other !== item &&
+                        other.day === item.day &&
+                        other.start < item.end &&
+                        other.end > item.start &&
+                        other.dosen.includes(dosenUrutanSatu)
+                );
+    
+                if (conflictingBySpecialRule.length > 0) {
+                    item.isConflict = true;
+                    conflictingBySpecialRule.forEach(conflictingItem => {
+                        conflictingItem.isConflict = true;
+                    });
+                }
             }
         });
     
         return mergedSchedule;
     };
     
-    // Menggabungkan jadwal dan mendeteksi tabrakan
+    
     const mergedSchedule = mergeScheduleData(schedule);
-    
-    // Menampilkan hasil
     console.log(mergedSchedule);
-     
+
+    const handleConflictClick = (conflictingClass) => {
+        const conflictingItems = mergedSchedule.filter(
+            (item) =>
+                item.day === conflictingClass.day &&
+                item !== conflictingClass && (
+                    (item.ruangan === conflictingClass.ruangan &&
+                     item.start < conflictingClass.end && 
+                     item.end > conflictingClass.start) ||
+                    (item.dosen.some(dosen => conflictingClass.dosen.includes(dosen)) &&
+                     item.start < conflictingClass.end && 
+                     item.end > conflictingClass.start)
+                )
+        );
     
+        if (conflictingItems.length > 0) {
+            const conflictDetails = conflictingItems.map((item, idx) => 
+                `(${idx + 1}) ${item.kelas}`
+            ).join('\n');
+            
+            alert(`Kelas ini memiliki konflik dengan:\n${conflictDetails}`);
+        } else {
+            alert("Tidak ditemukan konflik tambahan.");
+        }
+    };
 
     // Waktu untuk ditampilkan di kolom kiri
     const times = [];
@@ -176,6 +283,14 @@ const Home = () => {
                 <h1 className='head-h1'>Departemen Informatika Universitas Hasanuddin</h1>
                 <h2 className='head-h2'>Jadwal Perkuliahan Semester Ganjil 2024/2025</h2>
             </div>
+            <div className="statistics" style={{ textAlign: 'center', margin: '20px 0' }}>
+                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#333' }}>
+                            Total Data: <span style={{ color: '#007bff' }}>{totalData}</span>
+                        </Typography>
+                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#333'}}>
+                            Total Konflik: <span style={{ color: totalConflicts > 0 ? '#d32f2f' : '#4caf50' }}>{totalConflicts}</span>
+                        </Typography>
+                    </div>
             <div className="container">
                     {loading ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -189,14 +304,7 @@ const Home = () => {
                     </div>
                     ) : (
                     <>
-                    <div className="statistics" style={{ textAlign: 'center', margin: '20px 0' }}>
-                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#333' }}>
-                            Total Data: <span style={{ color: '#007bff' }}>{totalData}</span>
-                        </Typography>
-                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#333'}}>
-                            Total Konflik: <span style={{ color: totalConflicts > 0 ? '#d32f2f' : '#4caf50' }}>{totalConflicts}</span>
-                        </Typography>
-                    </div>
+                    
                         <div className="day-select">
                             <label htmlFor="day">Pilih Hari:</label>
                             <select id="day" value={selectedDay} onChange={handleDayChange}>
@@ -229,19 +337,26 @@ const Home = () => {
                                                         s.start === startTime &&
                                                         s.day === selectedDay
                                                 );
-    
+
                                                 if (classInSlot) {
                                                     const rowSpan = calculateRowSpan(classInSlot.start, classInSlot.end);
                                                     return (
                                                         <td key={ruangan} rowSpan={rowSpan}>
-                                                            <div className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}>
+                                                            <div
+                                                                className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}
+                                                                onClick={() => {
+                                                                    if (classInSlot.isConflict) {
+                                                                        handleConflictClick(classInSlot);
+                                                                    }
+                                                                }}
+                                                            >
                                                                 {classInSlot.kelas}&nbsp;
                                                                 <br />
                                                                 <br />
                                                                 {classInSlot.dosen.map((dosen, idx) => (
                                                                     <React.Fragment key={idx}>
                                                                         <div className='dosen-left'>
-                                                                            {idx + 1}. {dosen}
+                                                                         {dosen}
                                                                             <br />
                                                                         </div>
                                                                     </React.Fragment>
@@ -250,7 +365,7 @@ const Home = () => {
                                                         </td>
                                                     );
                                                 }
-    
+
                                                 const classInRange = mergedSchedule.find(
                                                     (s) =>
                                                         s.ruangan === ruangan &&
@@ -258,20 +373,21 @@ const Home = () => {
                                                         s.end > startTime &&
                                                         s.day === selectedDay
                                                 );
-    
+
                                                 if (classInRange) {
                                                     return null;
                                                 }
-    
+
                                                 return <td key={ruangan}></td>;
                                             })}
+
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
                         </>
-                )}
+                     )}
             </div>
             <Footer />
         </div>
