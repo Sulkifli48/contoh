@@ -11,13 +11,15 @@
     font-size: 20px;
 }
 
+/* Container untuk tabel */
 .container {
     padding: 20px;
     overflow-x: auto;
 }
 
+/* Styling untuk dropdown hari */
 .day-select {
-    margin-bottom: 20px;
+    margin-left: 25px;
 }
 
 .day-select label {
@@ -47,21 +49,28 @@
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
+/* Styling untuk tabel */
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse; 
+}
+
 .schedule-table th,
 .schedule-table td {
-    border: 1px solid #d8d8d8;
-    padding: 10px;
-    text-align: center;
-    height: 60px;
-    vertical-align: middle;
-    min-width: 220px;
+    border: 1px solid #d8d8d8; 
+    padding: 10px;  
+    text-align: center; 
+    vertical-align: middle; 
+    min-width: 220px;  
 }
 
+/* Styling untuk header tabel */
 .schedule-table th {
     background-color: #063d63;
-    color: #fff;
+    color: white;
 }
 
+/* Styling untuk waktu di kolom kiri agar tetap terlihat saat di-scroll */
 .sticky-time {
     position: sticky;
     left: 0;
@@ -70,6 +79,7 @@
     min-width: 100px;
 }
 
+/* Styling untuk elemen jadwal mata kuliah */
 .schedule-matkul {
     display: flex;
     flex-direction: column;
@@ -80,52 +90,53 @@
     box-sizing: border-box;
     padding: 8px;
     font-size: 1rem;
-    background-color: #007bff;  /* Warna biru default */
+    background-color: #007bff;  
     border-radius: 5px;
     margin: 2px;
 }
 
-/* Tambahkan kelas baru untuk jadwal yang bertabrakan */
 .schedule-matkul.conflict {
-    background-color: #ff4d4d; /* Warna merah jika bertabrakan */
+    background-color: #ff4d4d;  
 }
-
 
 .schedule-matkul span {
     font-weight: bold;
 }
 
+/* Styling untuk dosen pada setiap mata kuliah */
 .dosen-left {
     text-align: left;
     display: block;
     width: 100%;
     margin-left: 0;
 }
-.loading-message {
+
+/* Styling untuk pesan loading dan error */
+.loading-message, .error-message {
     font-size: 16px;
     font-weight: bold;
-    color: #007bff;
     text-align: center;
     margin-top: 20px;
+}
+
+.loading-message {
+    color: #007bff;
 }
 
 .error-message {
-    font-size: 16px;
-    font-weight: bold;
     color: #ff0000;
-    text-align: center;
-    margin-top: 20px;
 }
 
-
+/* Responsif untuk tampilan pada perangkat dengan lebar layar lebih kecil */
 @media (max-width: 768px) {
     .schedule-table th,
     .schedule-table td {
-        width: 100px;
-        font-size: 12px;
+        width: 100px;  
+        font-size: 12px;  
     }
 }
 
+/* Memperbaiki padding dan ukuran kolom */
 .schedule-table th,
 .schedule-table td {
     padding: 1px;
@@ -133,4 +144,17 @@
     width: 450px;
     height: 90px;
     box-sizing: border-box;
+}
+
+/* Menambahkan efek sticky pada kolom pertama */
+.schedule-table th:first-child,
+.schedule-table td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #f8f8f8; 
+    z-index: 1;  
+}
+
+.schedule-table th:first-child {
+    background-color: #063d63; 
 }

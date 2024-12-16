@@ -84,10 +84,14 @@ const Jadwal = () => {
           const [startB] = b.split(' - ');
           return startA.localeCompare(startB);
         });
-
+  
         item.jam = `${sortedTimes[0].split(' - ')[0]} - ${sortedTimes[sortedTimes.length - 1].split(' - ')[1]}`;
       }
+  
+      // Gabungkan semua dosen menjadi satu string
+      item.dosenString = item.dosen.join(' - '); 
     });
+    console.log(mergedSchedule)
 
     return mergedSchedule;
   };
@@ -111,18 +115,8 @@ const Jadwal = () => {
     { accessorKey: 'kelas', header: 'Kelas' },
     { accessorKey: 'w/p', header: 'W/P' },
     {
-      accessorKey: 'dosen',
+      accessorKey: 'dosenString',
       header: 'Dosen',
-      Cell: ({ cell }) => (
-        <>
-          {cell.getValue().map((dosen, index) => (
-            <span key={index}>
-              {dosen}
-              {index < cell.getValue().length - 1 && <br />}
-            </span>
-          ))}
-        </>
-      )
     },
     { accessorKey: 'ruangan', header: 'Ruangan' },
     {
