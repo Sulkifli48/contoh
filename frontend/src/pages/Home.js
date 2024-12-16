@@ -5,7 +5,9 @@ import Footer from '../components/Footer';
 import { 
     Typography, 
     CircularProgress,
+    Button,
   } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import './Home.css'; 
 
 const Home = () => {
@@ -14,6 +16,7 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState('');
+    const [showDetails, setShowDetails] = useState(false);
 
     const handleDayChange = (event) => {
         setSelectedDay(event.target.value);
@@ -273,6 +276,12 @@ const Home = () => {
         return Math.ceil((endTotalMinutes - startTotalMinutes) / interval);
     };
 
+    const toggleDetailsVisibility = () => {
+        setShowDetails((prevState) => !prevState);
+    };
+
+    
+
     const totalData = mergedSchedule.length;
     const totalConflicts = mergedSchedule.filter(item => item.isConflict).length;
 
@@ -291,6 +300,23 @@ const Home = () => {
                             Total Konflik: <span style={{ color: totalConflicts > 0 ? '#d32f2f' : '#4caf50' }}>{totalConflicts}</span>
                         </Typography>
                     </div>
+                    <div className="day-select">
+                        <Button 
+                                variant="contained" 
+                                onClick={toggleDetailsVisibility} 
+                                style={{ marginRight: '10px' }}
+                                startIcon={showDetails ? <VisibilityOff /> : <Visibility />} // Ikon mata
+                            >
+                               Dosen
+                            </Button>
+                            <label htmlFor="day">Pilih Hari:</label>
+                            <select id="day" value={selectedDay} onChange={handleDayChange}>
+                                {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'].map((day) => (
+                                    <option key={day} value={day}>{day}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
             <div className="container">
                     {loading ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -305,14 +331,7 @@ const Home = () => {
                     ) : (
                     <>
                     
-                        <div className="day-select">
-                            <label htmlFor="day">Pilih Hari:</label>
-                            <select id="day" value={selectedDay} onChange={handleDayChange}>
-                                {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'].map((day) => (
-                                    <option key={day} value={day}>{day}</option>
-                                ))}
-                            </select>
-                        </div>
+                        
     
                         <table className="schedule-table">
                             <thead>
@@ -353,10 +372,10 @@ const Home = () => {
                                                                 {classInSlot.kelas}&nbsp;
                                                                 <br />
                                                                 <br />
-                                                                {classInSlot.dosen.map((dosen, idx) => (
+                                                                {showDetails && classInSlot.dosen.map((dosen, idx) => (
                                                                     <React.Fragment key={idx}>
                                                                         <div className='dosen-left'>
-                                                                         {dosen}
+                                                                        {idx + 1}.  {dosen}
                                                                             <br />
                                                                         </div>
                                                                     </React.Fragment>
