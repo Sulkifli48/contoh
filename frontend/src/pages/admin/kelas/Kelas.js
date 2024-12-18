@@ -556,7 +556,7 @@ const AddKelas = () => {
                     fontWeight: 500,
                   }}
                 >
-                  {isShow ? "Cancel" : "Show"}
+                  {isShow ? "Cancel" : "Add jadwal"}
                 </Button>
 
                 {showButtons && (
@@ -571,7 +571,7 @@ const AddKelas = () => {
                       fontWeight: 500,
                     }}
                   >
-                    Add Jadwal
+                    Save
                   </Button>
                 )}
             </Stack> 
