@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
-// import { FaEdit } from "react-icons/fa";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { 
   Box, 
@@ -29,7 +28,7 @@ import {
 import {  
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD, 
   MRT_TableBodyCellValue as MRT_TABLE_BODY_CELL_VALUE, 
-  MRT_TablePagination as MRT_TABLE_PAGINATION, 
+  // MRT_TablePagination as MRT_TABLE_PAGINATION, 
   flexRender, 
   useMaterialReactTable 
 } from 'material-react-table';
@@ -43,9 +42,12 @@ const AddKelas = () => {
   const [skalaWarning, setSkalaWarning] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
- 
+  const [rowSelection, setRowSelection] = useState({});
 
-  // const [matakuliahs, setMatakuliahs] = useState([]);
+  const [showButtons, setShowButtons] = useState(false);
+  const [showRowSelection, setShowRowSelection] = useState(false);
+  const [isShow, setIsShow] = useState(false);
+
   const [matakuliahError, setMatakuliahError] = useState(false);
   const [matakuliahsData, setMatakuliahsData] = useState([]);
   const [roomsError, setRoomsError] = useState(false);
@@ -54,6 +56,9 @@ const AddKelas = () => {
   const [dosenData, setDosenData] = useState([]);
   const [dosenError, setDosenError] = useState(false);
   const [dosenErrors, setDosenErrors] = useState(false);
+
+ 
+
 
   const [kelasData, setKelasData] = useState([]);
   const [listKelasData, setListKelasData] = useState({
@@ -76,6 +81,43 @@ const AddKelas = () => {
     skala: '',
   });
 
+
+  const handleSubmit = async () => {
+    try {
+      const rowStatus = kelasData.map((kelas, index) => {
+        const isSelected = rowSelection[index] ? "iya" : "tidak";
+        return { kelasId: kelas.id_kelas, terpakai: isSelected };
+      });
+  
+      console.log("Data yang dikirim ke database:", rowStatus);
+  
+      // Mengirim data ke server
+      const response = await fetch(`http://127.0.0.1:5000/api/kelaseditpakai`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rowStatus,
+        }),
+      });
+  
+      if (response.ok) {
+        alert(`Data berhasil dikirim.`);
+  
+        // Refresh data kelas setelah berhasil
+        await fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
+      } else {
+        throw new Error("Gagal mengubah data kelas.");
+      }
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+      alert("Terjadi kesalahan saat mengirim data.");
+    }
+  };
+  
+  
+  
   
   const fetchData = async (endpoint, setState) => {
     try {
@@ -87,7 +129,7 @@ const AddKelas = () => {
       setError("Gagal mengambil data jadwal. Silakan coba lagi.");
       console.error(error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
   
@@ -97,6 +139,7 @@ const AddKelas = () => {
     fetchData('http://127.0.0.1:5000/api/listdosen', setDosenData);
     fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
   }, []);
+
 
   const handleEditKelas = (kelas) => {
     const dosenWithOrder = dosenData
@@ -108,7 +151,6 @@ const AddKelas = () => {
         })
         .map(dosen => dosen.dosen);
 
-    // Filter rooms untuk menghapus "alternatif"
     const filteredRooms = kelas.rooms ? kelas.rooms.filter(room => room !== "alternatif") : [];
 
     setKelasToEdit({
@@ -116,7 +158,7 @@ const AddKelas = () => {
         matakuliah: `${kelas.matakuliah}`,
         kelas: kelas.kelas,
         dosen: dosenWithOrder,
-        rooms: filteredRooms, // Menggunakan rooms yang sudah difilter
+        rooms: filteredRooms,
         kapasitas: kelas.kapasitas,
         skala: kelas.skala,
     });
@@ -252,7 +294,6 @@ const AddKelas = () => {
 
   const id_matkul = selectedMatakuliah ? selectedMatakuliah.id_matkul : null;
 
-  // Cek jika kelas sudah ada
   const isClassExist = kelasData.some(
     kelas => kelas.matakuliah === listKelasData.matakuliah && kelas.kelas === listKelasData.kelas
   );
@@ -281,11 +322,9 @@ const AddKelas = () => {
     });
 
     if (response.ok) {
-      // After adding, re-fetch all classes from the backend
       const updatedKelasData = await fetch('http://127.0.0.1:5000/api/listkelas')
         .then(res => res.json())
         .catch(error => console.error('Error fetching kelas data:', error));
-      // Update state with the fetched kelas data
       setKelasData(updatedKelasData);
       setListKelasData({
         matakuliah: '',
@@ -385,7 +424,31 @@ const AddKelas = () => {
       }));
     }
   }, [listKelasData.matakuliah, listKelasData.skala, kelasData,matakuliahsData]);
+
+
+  const toggleRowSelection = () => {
+    setShowButtons((prev) => !prev);
+    setShowRowSelection(prev => !prev);
+    setRowSelection((prevSelection) => {
+      const newSelection = { ...prevSelection };
+      kelasData.forEach((kelas, index) => {
+        if (kelas.terpakai === "iya") {
+          newSelection[index] = true; 
+        } else if (kelas.terpakai === "tidak") {
+          newSelection[index] = false; 
+        }
+      });
   
+      console.log("newSelection (berdasarkan urutan tabel):", newSelection); 
+      return newSelection;
+    });setIsShow((prev) => !prev);
+  };
+
+  
+  
+  
+
+
 
   const columns = [
     { 
@@ -397,22 +460,14 @@ const AddKelas = () => {
     { accessorKey: 'matakuliah', header: 'Matakuliah' },
     { accessorKey: 'kelas', header: 'Kelas', enableSorting: true },
     {
-      accessorKey: 'dosen',
+      accessorKey: 'dosenString',
       header: 'Dosen',
-      Cell: ({ row }) => (
-        <div>
-          {row.original.dosen.map((dosenId, index) => {
-            const dosenObj = dosenData.find(dosen => dosen.dosen === dosenId);
-            return (
-              <div key={index}>
-                {dosenObj ? dosenObj.dosen : 'Dosen tidak ditemukan'}
-              </div>
-            );
-          })}
-        </div>
-  ),
     },    
     { accessorKey: 'kapasitas', header: 'Kapasitas' },
+    {
+      accessorKey: 'semesterString',
+      header: 'Semester',
+    },
     {
       accessorKey: "action",
       header: "Action",
@@ -427,85 +482,142 @@ const AddKelas = () => {
   
   const table = useMaterialReactTable({
     columns,
-    data: kelasData, 
-    enableRowSelection: false,
+    data: kelasData,
+    enableRowSelection: showRowSelection,
+    
+    state: {
+      rowSelection,
+    },
+
+    onRowSelectionChange: setRowSelection,
     initialState: {
-      pagination: { pageSize: 30, pageIndex: 0 },
-      showGlobalFilter: true,
+      pagination: { pageSize: 1000, pageIndex: 0 },
+      showGlobalFilter: true, 
     },
     muiPaginationProps: {
-      rowsPerPageOptions: [10, 15, 20, 25, 30, 35],
+      rowsPerPageOptions: [kelasData.length],
       variant: 'outlined',
     },
     paginationDisplayMode: 'pages',
   });
   
-
   return (
     <div className='bg-db'>
-      <Sidebar />
-      <div className='dashboard'>
-        <div className='card-list-matakuliah'>
-          <h1>Daftar Kelas</h1>
-          <Stack>
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <CircularProgress />
-                <Typography variant="h6">Loading...</Typography>
-              </div>
-            ) : error ? (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <Typography color="error">{error}</Typography>
-              </div>
-            ) : (
-              <TableContainer className="border-list-matakuliah">
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
-                  <button
+  <Sidebar />
+  <div className='dashboard'>
+    <div className='card-list-matakuliah'>
+      <h1>Daftar Kelas</h1>
+      <Stack>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <CircularProgress />
+            <Typography variant="h6">Loading...</Typography>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Typography color="error">{error}</Typography>
+          </div>
+        ) : (
+          <TableContainer
+            className="border-list-matakuliah"
+            style={{ height: '600px', overflowY: 'auto' }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingBottom: '8px',
+              }}
+            >
+              <Stack direction="row" spacing={2} justifyContent="flex-start">
+             
+              <button
+                style={{
+                  width: '190px',
+                  height: '40px',
+                  background: '#3F72AF',
+                  borderRadius: '40px',
+                  color: 'white',
+                  fontWeight: 500,
+                }}
+                onClick={handleOpenAddModal}
+              >
+                Tambah Kelas
+              </button>
+              <Button
+                  onClick={toggleRowSelection}
+                  style={{
+                    width: '190px',
+                    height: '40px',
+                    background: isShow ? '#B22222' : '#3F72AF', 
+                    borderRadius: '40px',
+                    color: 'white',
+                    fontWeight: 500,
+                  }}
+                >
+                  {isShow ? "Cancel" : "Show"}
+                </Button>
+
+                {showButtons && (
+                  <Button
+                    onClick={handleSubmit}
                     style={{
                       width: '190px',
                       height: '40px',
-                      background: '#3F72AF',
+                      background: '#1E7E34', 
                       borderRadius: '40px',
                       color: 'white',
                       fontWeight: 500,
                     }}
-                    onClick={handleOpenAddModal}
                   >
-                    Tambah Kelas
-                  </button>
-                  <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
-                </Box>
-                <Table>
-                  <TableHead className="border-botton">
-                    {table.getHeaderGroups().map(headerGroup => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map(header => (
-                          <TableCell align="center" variant="head" key={header.id}>
-                            <span style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                              {flexRender(header.column.columnDef.Header ?? header.column.columnDef.header, header.getContext())}
-                            </span>
-                          </TableCell>
-                        ))}
-                      </TableRow>
+                    Add Jadwal
+                  </Button>
+                )}
+            </Stack> 
+            <div>
+              Jumlah Terpakai: {kelasData.filter((kelas) => kelas.terpakai === "iya").length}
+            </div>
+              <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
+            </Box>
+
+            <Table>
+              <TableHead className="border-botton">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <TableCell align="center" variant="head" key={header.id}>
+                        <span style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {flexRender(
+                            header.column.columnDef.Header ??
+                              header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </span>
+                      </TableCell>
                     ))}
-                  </TableHead>
-                  <TableBody>
-                    {table.getRowModel().rows.map(row => (
-                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map(cell => (
-                          <TableCell align="center" key={cell.id}>
-                            <MRT_TABLE_BODY_CELL_VALUE cell={cell} table={table} />
-                          </TableCell>
-                        ))}
-                      </TableRow>
+                  </TableRow>
+                ))}
+              </TableHead>
+              <TableBody>
+                {table.getRowModel().rows.map(row => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map(cell => (
+                      <TableCell align="center" key={cell.id}>
+                        <MRT_TABLE_BODY_CELL_VALUE cell={cell} table={table} />
+                      </TableCell>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-            {table && <MRT_TABLE_PAGINATION table={table} />}
-          </Stack>
-        </div>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+        {/* {table && <MRT_TABLE_PAGINATION table={table} />} */}
+      </Stack>
+    </div>
+  
+
 
       <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Delete Kelas</DialogTitle>
