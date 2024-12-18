@@ -22,36 +22,27 @@ const Home = () => {
         setSelectedDay(event.target.value);
     };
 
-    const [ruangan, setruangan] = useState([]);
+    const [ruangan, setRuangan] = useState([]);
 
-    const fetchruanganData = useCallback(async () => {
+    const fetchAllData = useCallback(async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:5000/api/listruangan');
-            setruangan(response.data.map((ruangan) => ruangan.name)); 
-        } catch (error) {
-            setError("Error fetching ruangan data");
-        }
-    }, []);
-
-    const fetchScheduleData = useCallback(async () => {
-        try {
-            const response = await axios.get('http://localhost:5000/api/jadwals1');
-            setSchedule(response.data);
-        } catch (error) {
-            setError("Error fetching schedule data");
+            setLoading(true); 
+            const [ruanganResponse, scheduleResponse] = await Promise.all([
+                axios.get('http://127.0.0.1:5000/api/listruangan'),
+                axios.get('http://localhost:5000/api/jadwals1'),
+            ]);
+            setRuangan(ruanganResponse.data.map((ruangan) => ruangan.name));
+            setSchedule(scheduleResponse.data);
+        } catch (err) {
+            setError("Error fetching data");
         } finally {
             setLoading(false);
         }
     }, []);
-    
-    useEffect(() => {
-        fetchScheduleData();
-    }, [fetchScheduleData]);
-    
-    useEffect(() => {
-        fetchruanganData();
-    }, [fetchruanganData]);
 
+    useEffect(() => {
+        fetchAllData();
+    }, [fetchAllData]);
 
      const mergeScheduleData = (schedule) => {
         const mergedSchedule = [];
@@ -330,8 +321,6 @@ const Home = () => {
                     </div>
                     ) : (
                     <>
-                    
-                        
     
                         <table className="schedule-table">
                             <thead>
