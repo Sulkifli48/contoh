@@ -21,7 +21,6 @@ const DashAdmin = () => {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        // Buat array untuk menyimpan promosi dari setiap fetch
         const responses = await Promise.all([
           fetch('http://127.0.0.1:5000/api/listmatakuliah'),
           fetch('http://127.0.0.1:5000/api/listdosen'),
