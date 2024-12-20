@@ -101,7 +101,8 @@ const Home = () => {
                     day: item.hari,
                     isConflict: false,
                     semester: item.semester,
-                });
+                    skala: item.skala || "default",
+                })
             }
         });
     
@@ -224,19 +225,22 @@ const Home = () => {
 
 
     const semesterColors = {
-        '1': '#FFD700', // Gold
-        '2': '#ADFF2F', // GreenYellow
-        '3': '#FF7F50', // Coral
-        '4': '#00BFFF', // DeepSkyBlue
-        '5': '#8A2BE2', // BlueViolet
-        '6': '#FF1493', // DeepPink
-        '7': '#7FFF00', // Chartreuse
+        '1': 'red', // Gold
+        // '2': '#ADFF2F', // GreenYellow
+        '3': 'blue', // Coral
+        // '4': '#00BFFF', // DeepSkyBlue
+        '5': 'green', // BlueViolet
+        // '6': '#FF1493', // DeepPink
+        '7': 'purple', // Chartreuse
         'Unknown': '#D3D3D3', // LightGray
     };
     
-    const getSemesterColor = (semesters) => {
+    const getSemesterColor = (semesters, skala) => {
+        if (skala === 'inter'){
+            return 'orange';
+        }
         if (semesters.length > 1) {
-            return '#FF4500'; // Warna khusus untuk lebih dari satu semester
+            return 'grey'; // Warna khusus untuk lebih dari satu semester
         }
         return semesterColors[semesters[0]] || semesterColors['Unknown'];
     };
