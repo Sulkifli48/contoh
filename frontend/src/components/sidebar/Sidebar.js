@@ -4,8 +4,8 @@ import './Sidebar.css';
 import './Sidebar-category.css';
 
 export default function Sidebar() {
-  const name = sessionStorage.getItem("name");
-  const email = sessionStorage.getItem("email");
+  const name = localStorage.getItem("name");
+  const email = localStorage.getItem("email");
   const [isOpen, setIsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -14,22 +14,23 @@ export default function Sidebar() {
   };
 
   const navigate = useNavigate();
-  const location = useLocation(); // Mengambil path URL saat ini
+  const location = useLocation();
   const handleLogout = () => {
     setLoggingOut(true);
-    sessionStorage.removeItem("user_id");
-    sessionStorage.removeItem("user_role");
-    sessionStorage.removeItem("name");
-    sessionStorage.removeItem("email");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("token"); 
+
     setTimeout(() => {
       setLoggingOut(false);
-      if (!sessionStorage.getItem("user_role")) {
-        navigate("/");
-        window.location.reload();
-      }
-      console.log(`Goodbye ${name}`);
+      navigate("/");
+      window.location.reload();
+
+      console.log(`Goodbye ${name}`); 
     }, 1000);
-  };
+};
+
 
   return (
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>

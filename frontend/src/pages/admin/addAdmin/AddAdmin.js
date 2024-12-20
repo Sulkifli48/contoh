@@ -27,6 +27,7 @@ const AddAdmin = () => {
 
   const [admins, setAdmins] = useState([]);
 
+
   const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
   };
@@ -45,26 +46,51 @@ const AddAdmin = () => {
   };
 
   const fetchUsers = async () => {
-      try {
-          const response = await fetch('http://127.0.0.1:5000/api/listusers');
-          const data = await response.json();
-          console.log(data);
-          setAdmins(data);
-      } catch (error) {
-          console.error("Error fetching data: ", error);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing, please login.");
+        return;
       }
+
+      const response = await fetch('http://127.0.0.1:5000/api/listusers', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setAdmins(data);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
   };
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, []); // Efek ini hanya dijalankan sekali saat komponen pertama kali dimuat
 
   const handleAddAdmin = async (e) => {
     e.preventDefault();
+    
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing, please login.");
+        return;
+      }
+      
         const response = await fetch('http://127.0.0.1:5000/api/usersadd', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(adminData),
@@ -91,8 +117,16 @@ const handleDeleteAdmin = (adminId, name) => {
 const handleConfirmDelete = async () => {
   if (confirmationText === `delete`) {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing, please login.");
+        return;
+      }
       const response = await fetch(`http://127.0.0.1:5000/api/usersdelete/${adminToDelete.id_users}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (response.ok) {
@@ -110,17 +144,27 @@ const handleConfirmDelete = async () => {
   }
 };
 
+
 const columns = [
   { accessorKey: 'name', header: 'Nama' },
   { accessorKey: 'email', header: 'Email' },
   {
     accessorKey: "action",
     header: "Action",
-    Cell: ({ row }) => (
-      <div>
-        <MdDelete color='red' size={20} onClick={() => handleDeleteAdmin(row.original.id_users, row.original.name)} />
-      </div>
-    ),
+    Cell: ({ row }) => {
+      const currentUserId = localStorage.getItem("user_id"); 
+      if (row.original.id_users.toString() === currentUserId) {
+        return null;
+      }
+      return (
+        <MdDelete
+          color="red"
+          size={20}
+          onClick={() => handleDeleteAdmin(row.original.id_users, row.original.name)}
+          style={{ cursor: "pointer" }}
+        />
+      );
+    },
   },
 ];
 

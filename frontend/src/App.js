@@ -18,7 +18,6 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Rute yang dilindungi untuk admin */}
         <Route path="/admin/dashboard" element={<ProtectedRoute element={<DashAdmin />} />} />
         <Route path="/admin/add-admin" element={<ProtectedRoute element={<AddAdmin />} />} />
         <Route path="/admin/dosen" element={<ProtectedRoute element={<Dosen />} />} />

@@ -1,11 +1,34 @@
 from flask import Blueprint, jsonify, request
 from database import mysql
 from datetime import datetime
+import jwt
+import datetime as dt
+from functools import wraps
+
+SECRET_KEY = "your_secret_key" 
 
 users_bp = Blueprint('users', __name__)
 
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(" ")[1] 
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 403
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            current_user = data['id_users']  
+        except Exception as e:
+            return jsonify({'message': 'Token is invalid!'}), 403
+        return f(current_user, *args, **kwargs)
+    return decorated_function
+
+
 @users_bp.route('/listusers', methods=['GET'])
-def get_listusers():
+@token_required
+def get_listusers(current_user):
     cur = mysql.connection.cursor()
     cur.execute("SELECT id_users, name, email, createdAt FROM users_db")
     rows = cur.fetchall()
@@ -22,7 +45,8 @@ def get_listusers():
     return jsonify(data), 200
 
 @users_bp.route('/usersadd', methods=['POST'])
-def add_users():
+@token_required
+def add_users(current_user):
     data = request.get_json()
     name = data['name']
     email = data['email']
@@ -35,16 +59,17 @@ def add_users():
     mysql.connection.commit()
     cur.close()
 
-    return jsonify({'message': 'Add Admin added successfully!'}), 201
+    return jsonify({'message': 'Admin added successfully!'}), 201
 
 @users_bp.route('/usersdelete/<int:id_users>', methods=['DELETE'])
-def delete_users(id_users):
+@token_required
+def delete_users(current_user, id_users):
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM users_db WHERE id_users = %s", (id_users,))
     mysql.connection.commit()
     cur.close()
 
-    return jsonify({'message': 'Matakuliah deleted successfully!'}), 200
+    return jsonify({'message': 'User deleted successfully!'}), 200
 
 @users_bp.route('/login', methods=['POST'])
 def login():
@@ -58,11 +83,16 @@ def login():
     cur.close()
 
     if user:
+        token = jwt.encode(
+            {'id_users': user[0], 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)},
+            SECRET_KEY,
+            algorithm="HS256"
+        )
         response = {
             'id_users': user[0],
             'name': user[1],
             'email': user[2],
-            'user_role': 'Admin'  # Sesuaikan dengan kolom role jika tersedia
+            'token': token  
         }
         return jsonify(response), 200
     else:

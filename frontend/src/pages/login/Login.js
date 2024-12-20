@@ -32,13 +32,15 @@ const Login = () => {
             const userData = await response.json();
             console.log('Login successful:', userData);
 
-            sessionStorage.setItem("user_id", userData.id_users);
-            sessionStorage.setItem("email", userData.email);
-            sessionStorage.setItem("user_role", userData.user_role);
-            sessionStorage.setItem("name", userData.name);
+            // Menyimpan token JWT di localStorage
+            localStorage.setItem("token", userData.token);
+            localStorage.setItem("user_id", userData.id_users);
+            localStorage.setItem("email", userData.email);
+            localStorage.setItem("name", userData.name);
 
+            // Redirect ke halaman dashboard admin setelah login
             navigate("/admin/dashboard");
-            window.location.reload();
+            window.location.reload();  // Optional: untuk me-refresh halaman jika perlu
             console.log(`Welcome, ${userData.name}`);
         } catch (error) {
             setError('Login failed. Please check your email and password and try again.');
@@ -46,6 +48,7 @@ const Login = () => {
             setIsLoading(false);
         }
     };
+
 
     return (
         <div className='wrapper'>

@@ -107,6 +107,8 @@ const AddKelas = () => {
   
         // Refresh data kelas setelah berhasil
         await fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
+        setIsShow(false); 
+        setShowButtons(false); 
       } else {
         throw new Error("Gagal mengubah data kelas.");
       }
@@ -545,7 +547,7 @@ const AddKelas = () => {
               >
                 Tambah Kelas
               </button>
-              <Button
+              <button
                   onClick={toggleRowSelection}
                   style={{
                     width: '190px',
@@ -557,10 +559,10 @@ const AddKelas = () => {
                   }}
                 >
                   {isShow ? "Cancel" : "Add jadwal"}
-                </Button>
+                </button>
 
                 {showButtons && (
-                  <Button
+                  <button
                     onClick={handleSubmit}
                     style={{
                       width: '190px',
@@ -572,7 +574,7 @@ const AddKelas = () => {
                     }}
                   >
                     Save
-                  </Button>
+                  </button>
                 )}
             </Stack> 
             <div>

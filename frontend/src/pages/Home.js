@@ -66,7 +66,7 @@ const Home = () => {
         };
     
         schedule.forEach(item => {
-            // Cari entri jadwal yang sama berdasarkan kombinasi kelas, ruangan, dan hari
+
             const existingSchedule = mergedSchedule.find(mergedItem =>
                 mergedItem.kelas === item.kelas &&
                 mergedItem.ruangan === item.ruangan &&
@@ -100,6 +100,7 @@ const Home = () => {
                     minggu: [item.minggu],
                     day: item.hari,
                     isConflict: false,
+                    semester: item.semester,
                 });
             }
         });
@@ -192,6 +193,7 @@ const Home = () => {
     };
     
     
+    
     const mergedSchedule = mergeScheduleData(schedule);
     console.log(mergedSchedule);
 
@@ -219,6 +221,26 @@ const Home = () => {
             alert("Tidak ditemukan konflik tambahan.");
         }
     };
+
+
+    const semesterColors = {
+        '1': '#FFD700', // Gold
+        '2': '#ADFF2F', // GreenYellow
+        '3': '#FF7F50', // Coral
+        '4': '#00BFFF', // DeepSkyBlue
+        '5': '#8A2BE2', // BlueViolet
+        '6': '#FF1493', // DeepPink
+        '7': '#7FFF00', // Chartreuse
+        'Unknown': '#D3D3D3', // LightGray
+    };
+    
+    const getSemesterColor = (semesters) => {
+        if (semesters.length > 1) {
+            return '#FF4500'; // Warna khusus untuk lebih dari satu semester
+        }
+        return semesterColors[semesters[0]] || semesterColors['Unknown'];
+    };
+    
 
     // Waktu untuk ditampilkan di kolom kiri
     const times = [];
@@ -350,8 +372,12 @@ const Home = () => {
                                                     const rowSpan = calculateRowSpan(classInSlot.start, classInSlot.end);
                                                     return (
                                                         <td key={ruangan} rowSpan={rowSpan}>
-                                                            <div
-                                                                className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}
+                                                             <div
+                                                                    className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}
+                                                                    style={{
+                                                                        backgroundColor: getSemesterColor(classInSlot.semester),
+                                                                        color: '#fff',
+                                                                    }}
                                                                 onClick={() => {
                                                                     if (classInSlot.isConflict) {
                                                                         handleConflictClick(classInSlot);
