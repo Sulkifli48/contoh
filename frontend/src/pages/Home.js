@@ -101,7 +101,7 @@ const Home = () => {
                     day: item.hari,
                     isConflict: false,
                     semester: item.semester,
-                    skala: item.skala || "default",
+                    skala: item.skala,
                 })
             }
         });
@@ -227,7 +227,7 @@ const Home = () => {
     const semesterColors = {
         '1': 'red', // Gold
         // '2': '#ADFF2F', // GreenYellow
-        '3': 'blue', // Coral
+        '3': 'lightblue', // Coral
         // '4': '#00BFFF', // DeepSkyBlue
         '5': 'green', // BlueViolet
         // '6': '#FF1493', // DeepPink
@@ -236,7 +236,7 @@ const Home = () => {
     };
     
     const getSemesterColor = (semesters, skala) => {
-        if (skala === 'inter'){
+        if (skala === 'Inter'){
             return 'orange';
         }
         if (semesters.length > 1) {
@@ -379,7 +379,7 @@ const Home = () => {
                                                              <div
                                                                     className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}
                                                                     style={{
-                                                                        backgroundColor: getSemesterColor(classInSlot.semester),
+                                                                        backgroundColor: getSemesterColor(classInSlot.semester,classInSlot.skala),
                                                                         color: '#fff',
                                                                     }}
                                                                 onClick={() => {

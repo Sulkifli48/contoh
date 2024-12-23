@@ -3,24 +3,7 @@ import axios from 'axios';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import "./Style.css";
 import { MdDelete } from "react-icons/md";
-import {
-  Box,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  CircularProgress // import untuk indikator loading
-} from '@mui/material';
+import {Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, CircularProgress } from '@mui/material';
 import {
   MRT_GlobalFilterTextField as MRT_GLOBAL_FILTER_TEXT_FIELD,
   MRT_TableBodyCellValue as MRT_TABLE_BODY_CELL_VALUE,
@@ -50,6 +33,26 @@ const Jadwal = () => {
       setLoading(false);
     }
   }, []);
+
+  const refreshJadwal = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/refresh_jadwal', {
+        method: 'PUT',
+      });
+      const data = await response.json();
+      if (data.message === 'Jadwal berhasil diperbarui.') {
+        // Setelah refresh, ambil data terbaru
+        fetchScheduleData();
+      } else {
+        alert('Gagal memperbarui jadwal');
+      }
+    } catch (error) {
+      console.error('Error refreshing jadwal:', error);
+    }finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchScheduleData();
@@ -164,8 +167,18 @@ const Jadwal = () => {
             <Stack>
               <TableContainer className='border-list-matakuliah'>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={refreshJadwal} 
+                  >
+                    Refresh Jadwal
+                  </Button>
                   <MRT_GLOBAL_FILTER_TEXT_FIELD table={table} />
                 </Box>
+
                 <Table>
                   <TableHead className='border-botton'>
                     {table.getHeaderGroups().map((headerGroup) => (

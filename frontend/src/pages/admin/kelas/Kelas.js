@@ -92,7 +92,7 @@ const AddKelas = () => {
       console.log("Data yang dikirim ke database:", rowStatus);
   
       // Mengirim data ke server
-      const response = await fetch(`http://127.0.0.1:5000/api/kelaseditpakai`, {
+      const response = await fetch("http://127.0.0.1:5000/api/kelaseditpakai", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -103,12 +103,11 @@ const AddKelas = () => {
       });
   
       if (response.ok) {
-        alert(`Data berhasil dikirim.`);
-  
-        // Refresh data kelas setelah berhasil
+        alert("Data berhasil dikirim.");
         await fetchData('http://127.0.0.1:5000/api/listkelas', setKelasData);
         setIsShow(false); 
         setShowButtons(false); 
+        setShowRowSelection(false);
       } else {
         throw new Error("Gagal mengubah data kelas.");
       }
@@ -117,9 +116,6 @@ const AddKelas = () => {
       alert("Terjadi kesalahan saat mengirim data.");
     }
   };
-  
-  
-  
   
   const fetchData = async (endpoint, setState) => {
     try {
@@ -522,7 +518,7 @@ const AddKelas = () => {
         ) : (
           <TableContainer
             className="border-list-matakuliah"
-            style={{ height: '600px', overflowY: 'auto' }}
+            style={{ height: '85vh', overflowY: 'auto' }}
           >
             <Box
               sx={{
