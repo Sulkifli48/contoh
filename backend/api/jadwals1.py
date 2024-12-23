@@ -36,11 +36,11 @@ except Exception as e:
 def get_jadwal_s1():
     return jsonify(jadwal_s1), 200
 
-# Route untuk memperbarui jadwal secara manual
-# @jadwals1_bp.route('/jadwals1/update', methods=['POST'])
-# def update_jadwal_s1():
-#     try:
-#         execute_ipynb('api/penjadwalan.ipynb')  # Eksekusi ulang file .ipynb
-#         return jsonify({"message": "Jadwal berhasil diperbarui"}), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+# Route untuk refresh data jadwal dengan mengeksekusi ulang file .ipynb
+@jadwals1_bp.route('/refresh_jadwal', methods=['PUT'])
+def refresh_jadwal():
+    try:
+        execute_ipynb('api/penjadwalan.ipynb')  # Jalankan ulang file .ipynb
+        return jsonify({"message": "Jadwal berhasil diperbarui."}), 200
+    except Exception as e:
+        return jsonify({"message": f"Terjadi kesalahan: {e}"}), 500
