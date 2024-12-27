@@ -102,6 +102,7 @@ const Home = () => {
                     isConflict: false,
                     semester: item.semester,
                     skala: item.skala,
+                    jenjang: item.jenjang,
                 })
             }
         });
@@ -235,10 +236,14 @@ const Home = () => {
         'Unknown': '#D3D3D3', // LightGray
     };
     
-    const getSemesterColor = (semesters, skala) => {
+    const getSemesterColor = (semesters, skala, jenjang) => {
         if (skala === 'Inter'){
             return 'orange';
         }
+        if (jenjang === 'S2'){
+            return 'aqua';
+        }
+
         if (semesters.length > 1) {
             return 'grey'; // Warna khusus untuk lebih dari satu semester
         }
@@ -269,8 +274,7 @@ const Home = () => {
             }
             
             if (startTime === '12:00') {
-                currentHour = 13; 
-                currentMinute = 0; 
+                timesArray.push('12:00 - 13:00');
                 continue;
             }
 
@@ -280,7 +284,7 @@ const Home = () => {
     };
 
     generateTimes(morningStartHour, morningStartMinute, morningEndHour, times);
-    times.push('12:00 - 13:00');
+    // times.push('12:00 - 13:00');
     generateTimes(afternoonStartHour, 0, afternoonEndHour, times); 
 
     
@@ -379,7 +383,7 @@ const Home = () => {
                                                              <div
                                                                     className={`schedule-matkul ${classInSlot.isConflict ? 'conflict' : ''}`}
                                                                     style={{
-                                                                        backgroundColor: getSemesterColor(classInSlot.semester,classInSlot.skala),
+                                                                        backgroundColor: getSemesterColor(classInSlot.semester,classInSlot.skala, classInSlot.jenjang ),
                                                                         color: '#fff',
                                                                     }}
                                                                 onClick={() => {

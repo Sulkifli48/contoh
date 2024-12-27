@@ -831,7 +831,7 @@ const AddKelas = () => {
               <Grid item xs={12}>
               <Autocomplete
                 multiple
-                options={roomsData.map((room) => room.rooms)} 
+                options={dosenData.map((dosen) => dosen.dosen)} 
                 renderInput={(params) => (
                   <TextField
                     {...params}
